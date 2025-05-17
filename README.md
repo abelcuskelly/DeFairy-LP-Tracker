@@ -97,10 +97,10 @@ One of DeFairy's most powerful features is the ability to set up automatic rebal
 Create a `.env.local` file with the following variables:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
-NEXT_PUBLIC_SOLANA_RPC_URL=your_solana_rpc_url
-REDIS_URL=your_redis_url
+NEXT_PUBLIC_SUPABASE_URL=https://zuvecrpcenaemfeqzunu.supabase.co 
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dmVjcnBjZW5hZW1mZXF6dW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0NzI1MTIsImV4cCI6MjA2MzA0ODUxMn0.Pg-0XkcHWHz2aoLcrdAnXt52E1eW-Wre1MNZxj-MIQQ
+NEXT_PUBLIC_SOLANA_RPC_URL=youhttps://api.mainnet-beta.solana.com/r_solana_rpc_url
+REDIS_URL=redis-11525.c80.us-east-1-2.ec2.redns.redis-cloud.com:11525
 ```
 
 ## Deployment
