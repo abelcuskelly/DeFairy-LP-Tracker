@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletConnectButton } from '../components/WalletConnectButton';
 
 const HomePage: React.FC = () => {
-  const [walletAddress, setWalletAddress] = useState('');
+  const [walletAddress, setWalletAddress] = React.useState('');
   const { publicKey, connected } = useWallet();
 
   const handleSubmitAddress = (e: React.FormEvent) => {
@@ -18,7 +18,7 @@ const HomePage: React.FC = () => {
   };
 
   // If wallet is connected, redirect to dashboard
-  useEffect(() => {
+  React.useEffect(() => {
     if (connected && publicKey) {
       // Use publicKey instead of the manual input if connected via wallet
       const connectedAddress = publicKey.toString();

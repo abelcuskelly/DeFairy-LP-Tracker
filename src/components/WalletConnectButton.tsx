@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export const WalletConnectButton: React.FC = () => {
   const { wallet, publicKey, connecting, connected, disconnect } = useWallet();
-  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [walletAddress, setWalletAddress] = React.useState<string>('');
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (publicKey) {
       setWalletAddress(publicKey.toString());
     } else {
