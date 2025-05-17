@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --fairy-blue-50: #f0f5ff;
+  --fairy-blue-900: #1f2a6c;
+  --fairy-blue-950: #111536;
+  --fairy-purple-300: #d1a1ff;
+  --fairy-purple-500: #a33dff;
+  --fairy-green-300: #7dffa9;
+  --fairy-green-400: #39ff7a;
+  --fairy-gold-400: #ffcf18;
+}
+
+body {
+  background: linear-gradient(to bottom, var(--fairy-blue-950), var(--fairy-blue-900));
+  min-height: 100vh;
+  color: white;
+}
+
+.magical-border {
+  position: relative;
+  border: 1px solid rgba(94, 115, 255, 0.3);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.magical-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.5rem;
+  padding: 1px;
+  background: linear-gradient(
+    45deg, 
+    rgba(94, 115, 255, 0.5), 
+    rgba(209, 161, 255, 0.5), 
+    rgba(125, 255, 169, 0.5)
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.fairy-card {
+  @apply bg-fairy-blue-950/80 backdrop-blur-sm border border-fairy-blue-700/30 rounded-lg p-4 shadow-fairy transition-all duration-300;
+}
+
+.fairy-card:hover {
+  @apply shadow-fairy-hover;
+}
+
+.fairy-button {
+  @apply bg-gradient-to-r from-fairy-purple-500 to-fairy-blue-600 text-white px-4 py-2 rounded-md shadow-fairy transition-all duration-200;
+}
+
+.fairy-button:hover {
+  @apply shadow-fairy-hover scale-105;
+}
+
+.fairy-input {
+  @apply bg-fairy-blue-900/50 border border-fairy-blue-700/30 rounded-md px-3 py-2 text-white placeholder-fairy-blue-300/50 focus:outline-none focus:ring-2 focus:ring-fairy-purple-300/50;
+}
+
+.sparkle-effect {
+  position: relative;
+}
+
+.sparkle-effect::before,
+.sparkle-effect::after {
+  content: '';
+  position: absolute;
+  background-image: url('/images/sparkle.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.sparkle-effect::before {
+  top: -10px;
+  right: -5px;
+  animation-delay: 0.5s;
+}
+
+.sparkle-effect::after {
+  bottom: -5px;
+  left: -10px;
+  animation-delay: 1s;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Magical stars background */
+.stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: twinkle 5s infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+} 
