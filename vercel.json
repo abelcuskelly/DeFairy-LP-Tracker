@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "regions": ["sfo1"],
+  "env": {
+    "NEXT_PUBLIC_SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com/",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://zuvecrpcenaemfeqzunu.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dmVjcnBjZW5hZW1mZXF6dW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0NzI1MTIsImV4cCI6MjA2MzA0ODUxMn0.Pg-0XkcHWHz2aoLcrdAnXt52E1eW-Wre1MNZxj-MIQQ"
+  }
+} 
