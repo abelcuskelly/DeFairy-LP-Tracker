@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 // Define types for our data
 interface PeriodData {
@@ -50,8 +50,8 @@ const PoolsList: React.FC<PoolsListProps> = ({
   setActivePeriod,
 }) => {
   // Sort state
-  const [sortField, setSortField] = useState<string>('balance');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = React.useState<string>('balance');
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('desc');
 
   // Map period keys to display labels
   const periodLabels = {
