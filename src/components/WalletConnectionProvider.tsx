@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React, { useMemo } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -24,7 +24,7 @@ export default function WalletConnectionProvider({ children }: WalletConnectionP
   const network = 'mainnet-beta' as WalletAdapterNetwork;
 
   // You can also provide a custom RPC endpoint
-  const endpoint = React.useMemo(() => {
+  const endpoint = useMemo(() => {
     if (process.env.NEXT_PUBLIC_SOLANA_RPC_URL) {
       return process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
     }
@@ -32,7 +32,7 @@ export default function WalletConnectionProvider({ children }: WalletConnectionP
   }, [network]);
 
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking and lazy loading
-  const wallets = React.useMemo(
+  const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter({ network }),

@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 
@@ -23,13 +23,13 @@ const Dashboard = () => {
   // Use connected wallet address if available, otherwise use the address from URL params
   const walletAddress = connected && connectedAddress ? connectedAddress : paramAddress;
   
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [portfolioData, setPortfolioData] = React.useState(null);
-  const [poolsData, setPoolsData] = React.useState([]);
-  const [error, setError] = React.useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [portfolioData, setPortfolioData] = useState(null);
+  const [poolsData, setPoolsData] = useState([]);
+  const [error, setError] = useState('');
 
   // Load wallet data
-  React.useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
       if (!walletAddress) {
         setError('No wallet address provided');
@@ -55,7 +55,7 @@ const Dashboard = () => {
   }, [walletAddress]);
 
   // Period state for expandable sections (24h, 7d, 30d, all)
-  const [activePeriod, setActivePeriod] = React.useState('24h');
+  const [activePeriod, setActivePeriod] = useState('24h');
 
   return (
     <div className="min-h-screen">
