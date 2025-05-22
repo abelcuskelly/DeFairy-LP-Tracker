@@ -567,4 +567,32 @@ body {
 
 .ai-message.error {
     background: rgba(255, 107, 107, 0.2);
+}
+
+/* Auto-rebalancing toggle */
+.auto-rebalance-toggle {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 1000;
+}
+
+.auto-rebalance-toggle .btn {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: white;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.auto-rebalance-toggle .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
+
+.auto-rebalance-toggle .btn.active {
+    background: linear-gradient(135deg, #32cd32, #228b22);
+}
+
+.auto-rebalance-toggle .btn i {
+    margin-right: 8px;
 } 

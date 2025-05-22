@@ -3,6 +3,8 @@ class DeFairyApp {
     constructor() {
         this.refreshInterval = null;
         this.isLoading = false;
+        this.activeWallet = null;
+        this.autoRebalancingEnabled = false;
     }
 
     async init() {
@@ -24,6 +26,29 @@ class DeFairyApp {
         
         // Auto-refresh toggle (could add this as a setting)
         this.startAutoRefresh();
+        
+        // Setup Helius event listeners
+        this.setupHeliusEventListeners();
+    }
+    
+    setupHeliusEventListeners() {
+        // Listen for price updates
+        heliusClient.addEventListener('price', (priceData) => {
+            console.log('Price update received:', priceData);
+            // Update UI with new price data
+            if (this.activeWallet && !this.isLoading) {
+                this.refreshPortfolio(false);
+            }
+        });
+        
+        // Listen for account updates
+        heliusClient.addEventListener('account', (accountInfo) => {
+            console.log('Account update received:', accountInfo);
+            // Update UI with new account data
+            if (this.activeWallet && !this.isLoading) {
+                this.refreshPortfolio(false);
+            }
+        });
     }
 
     async checkWalletConnection() {
@@ -72,16 +97,23 @@ class DeFairyApp {
             showNotification('Please enter a valid Solana wallet address.', 'error');
             return;
         }
-
+        
+        this.activeWallet = walletAddress;
+        await this.refreshPortfolio(true);
+    }
+    
+    async refreshPortfolio(showLoadingUI = true) {
+        if (this.isLoading || !this.activeWallet) return;
+        
         this.isLoading = true;
-        showNotification('Loading portfolio data...', 'info');
+        if (showLoadingUI) {
+            showNotification('Loading portfolio data...', 'info');
+            this.showLoadingStates();
+        }
         
         try {
-            // Show loading states
-            this.showLoadingStates();
-            
-            // Fetch user positions
-            const positions = await apiManager.getUserPositions(walletAddress);
+            // Fetch user positions using Helius API
+            const positions = await apiManager.getUserPositions(this.activeWallet);
             
             // Calculate metrics
             const metrics = apiManager.calculatePortfolioMetrics(positions);
@@ -90,15 +122,63 @@ class DeFairyApp {
             uiManager.updatePortfolioStats(metrics);
             uiManager.renderPools(metrics.pools);
             
-            showNotification('Portfolio loaded successfully! ✨', 'success');
+            // Update auto-rebalancer if enabled
+            if (this.autoRebalancingEnabled) {
+                autoRebalancer.updatePositions(positions);
+            }
+            
+            if (showLoadingUI) {
+                showNotification('Portfolio loaded successfully! ✨', 'success');
+            }
+            
+            // Check for rebalancing opportunities
+            await this.checkRebalancingOpportunities(positions);
             
         } catch (error) {
             console.error('Error loading portfolio:', error);
-            showNotification('Failed to load portfolio: ' + error.message, 'error');
-            this.showErrorStates();
+            if (showLoadingUI) {
+                showNotification('Failed to load portfolio: ' + error.message, 'error');
+                this.showErrorStates();
+            }
         } finally {
             this.isLoading = false;
         }
+    }
+    
+    async checkRebalancingOpportunities(positions) {
+        try {
+            // Get rebalancing recommendations
+            const recommendations = await apiManager.getRebalancingRecommendations(positions);
+            
+            // If there are recommendations, show a notification
+            if (recommendations && recommendations.recommendations && recommendations.recommendations.length > 0) {
+                showNotification(`Rebalancing opportunity: ${recommendations.message}`, 'info');
+                
+                // If auto-rebalancing is enabled, start monitoring
+                if (this.autoRebalancingEnabled) {
+                    autoRebalancer.startMonitoring(this.activeWallet, positions);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking rebalancing opportunities:', error);
+        }
+    }
+    
+    toggleAutoRebalancing(enable) {
+        this.autoRebalancingEnabled = enable;
+        
+        if (enable && this.activeWallet) {
+            showNotification('Auto-rebalancing enabled! Monitoring positions for optimal performance.', 'success');
+            // Start monitoring positions
+            autoRebalancer.startMonitoring(this.activeWallet);
+        } else {
+            // Stop monitoring
+            autoRebalancer.stopMonitoring();
+            showNotification('Auto-rebalancing disabled.', 'info');
+        }
+        
+        // Update button state
+        uiManager.updateRebalancingButtonState(enable);
     }
 
     showLoadingStates() {
@@ -137,16 +217,9 @@ class DeFairyApp {
     startAutoRefresh() {
         // Refresh every minute if wallet is connected
         this.refreshInterval = setInterval(async () => {
-            const walletAddress = walletManager.getWalletAddress();
-            if (walletAddress && !this.isLoading) {
+            if (this.activeWallet && !this.isLoading) {
                 console.log('🔄 Auto-refreshing portfolio data...');
-                try {
-                    const positions = await apiManager.getUserPositions(walletAddress);
-                    const metrics = apiManager.calculatePortfolioMetrics(positions);
-                    uiManager.updatePortfolioStats(metrics);
-                } catch (error) {
-                    console.error('Auto-refresh failed:', error);
-                }
+                await this.refreshPortfolio(false);
             }
         }, 60000); // 1 minute
     }
@@ -155,6 +228,11 @@ class DeFairyApp {
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
             this.refreshInterval = null;
+        }
+        
+        // Also stop auto-rebalancing
+        if (this.autoRebalancingEnabled) {
+            this.toggleAutoRebalancing(false);
         }
     }
 
@@ -213,6 +291,13 @@ function showNotification(message, type = 'info') {
 // Global function for load portfolio button
 async function loadPortfolio() {
     await app.loadPortfolio();
+}
+
+// Toggle auto-rebalancing (can be connected to a UI element)
+function toggleAutoRebalancing() {
+    if (app) {
+        app.toggleAutoRebalancing(!app.autoRebalancingEnabled);
+    }
 }
 
 // Initialize app when DOM is loaded

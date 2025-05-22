@@ -247,6 +247,20 @@ class UIManager {
         
         return responses.default;
     }
+    
+    // Update auto-rebalancing button state
+    updateRebalancingButtonState(isEnabled) {
+        const button = document.getElementById('rebalanceToggleBtn');
+        if (!button) return;
+        
+        if (isEnabled) {
+            button.classList.add('active');
+            button.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto-Rebalancing Active';
+        } else {
+            button.classList.remove('active');
+            button.innerHTML = '<i class="fas fa-sync-alt"></i> Enable Auto-Rebalancing';
+        }
+    }
 }
 
 // Global UI manager instance
