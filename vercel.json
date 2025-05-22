@@ -2,10 +2,10 @@
   "version": 2,
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": ".next",
+  "framework": null,
+  "outputDirectory": ".",
   "regions": ["sfo1"],
   "env": {
-    "NEXT_PUBLIC_SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com/"
+    "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com/"
   }
 } 
