@@ -2,21 +2,31 @@
   "name": "defairy",
   "version": "1.0.0",
   "description": "Magical Solana LP Portfolio Tracker",
-  "main": "index.html",
   "scripts": {
-    "dev": "serve .",
-    "build": "echo 'Build script here'",
-    "test": "echo 'Test script here'"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@solana/web3.js": "^1.87.6",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-phantom": "^0.9.24",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.34",
     "@solana/wallet-adapter-wallets": "^0.19.24",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "next": "13.5.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "serve": "^14.2.1"
+    "eslint": "^8.52.0",
+    "eslint-config-next": "13.5.6",
+    "typescript": "^5.2.2",
+    "@types/node": "^20.8.7",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7"
   },
   "keywords": ["solana", "defi", "liquidity", "portfolio", "tracker"],
   "author": "DeFairy Team",
