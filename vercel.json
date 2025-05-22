@@ -15,6 +15,10 @@
       "dest": "api/openai.js"
     },
     {
+      "src": "/api/webhook",
+      "dest": "api/webhook.js"
+    },
+    {
       "handle": "filesystem"
     }
   ]

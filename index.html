@@ -59,6 +59,79 @@
         .ai-chat-input button i.fas {
             font-size: 0.7em !important;
         }
+        
+        /* Rebalancing recommendations */
+        .rebalancing-recommendations {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .recommendations-header h3 {
+            color: #4a4a4a;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .recommendations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .recommendation-item {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 4px solid #f47c7c;
+        }
+        
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .recommendation-header h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .recommendation-reason {
+            font-size: 12px;
+            color: #f47c7c;
+        }
+        
+        .recommendation-details {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.03);
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .recommendation-details p {
+            margin: 4px 0;
+        }
+        
+        .action-button {
+            margin-top: 10px;
+            padding: 6px 12px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        
+        .action-button:hover {
+            background-color: #3a80d2;
+        }
     </style>
     <script>
         // Securely set the OpenAI API key
@@ -77,7 +150,7 @@
             <span style="margin-left: 5px;">DeFairy</span>
         </div>
         <div class="wallet-section">
-            <input type="text" class="wallet-input" placeholder="Enter Solana wallet address..." id="walletAddress">
+            <input type="text" class="wallet-input" placeholder="Enter Solana wallet address..." id="walletInput">
             <button class="btn btn-secondary" onclick="connectWallet()">
                 <i class="fas fa-wallet"></i>
                 Connect Phantom
@@ -233,6 +306,11 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Rebalancing Recommendations -->
+            <div id="rebalancingRecommendations" class="rebalancing-recommendations" style="display: none;">
+                <!-- Will be populated by JavaScript -->
+            </div>
         </section>
     </div>
 
@@ -261,6 +339,7 @@
     <!-- Scripts -->
     <script src="scripts/wallet.js"></script>
     <script src="scripts/helius.js"></script>
+    <script src="scripts/orca.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/openai.js"></script>
     <script src="scripts/autoRebalancing.js"></script>

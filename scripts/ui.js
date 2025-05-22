@@ -280,6 +280,181 @@ class UIManager {
             button.innerHTML = '<i class="fas fa-sync-alt"></i> Enable Auto-Rebalancing';
         }
     }
+    
+    // Toggle auto-rebalancing functionality
+    async toggleAutoRebalancing() {
+        try {
+            const button = document.getElementById('rebalanceToggleBtn');
+            const isCurrentlyEnabled = button.classList.contains('active');
+            const walletAddress = document.getElementById('walletInput').value;
+            
+            if (!walletAddress) {
+                showNotification('Please connect your wallet or enter an address first', 'warning');
+                return;
+            }
+            
+            // Toggle the state
+            const newState = !isCurrentlyEnabled;
+            
+            // Update UI to show processing
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            // Call API to toggle auto-rebalancing
+            const success = await apiManager.toggleAutoRebalancing(walletAddress, newState);
+            
+            if (success) {
+                // Update button state
+                this.updateRebalancingButtonState(newState);
+                
+                // If enabling, check for rebalancing opportunities
+                if (newState) {
+                    this.checkRebalancingOpportunities();
+                }
+            }
+            
+            // Re-enable button
+            button.disabled = false;
+        } catch (error) {
+            console.error('Error toggling auto-rebalancing:', error);
+            showNotification('Failed to toggle auto-rebalancing: ' + error.message, 'error');
+            
+            // Reset button state
+            const button = document.getElementById('rebalanceToggleBtn');
+            button.disabled = false;
+            this.updateRebalancingButtonState(false);
+        }
+    }
+    
+    // Check for rebalancing opportunities
+    async checkRebalancingOpportunities() {
+        try {
+            const walletAddress = document.getElementById('walletInput').value;
+            
+            if (!walletAddress) return;
+            
+            // Get current positions
+            const positions = await apiManager.getUserPositions(walletAddress);
+            
+            // Get rebalancing recommendations
+            const recommendations = await apiManager.getRebalancingRecommendations(positions);
+            
+            if (recommendations.recommendations.length > 0) {
+                // Show recommendations
+                this.displayRebalancingRecommendations(recommendations);
+            }
+        } catch (error) {
+            console.error('Error checking rebalancing opportunities:', error);
+        }
+    }
+    
+    // Display rebalancing recommendations
+    displayRebalancingRecommendations(recommendations) {
+        try {
+            const container = document.getElementById('rebalancingRecommendations');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (recommendations.recommendations.length === 0) {
+                container.innerHTML = '<p>No rebalancing opportunities found.</p>';
+                return;
+            }
+            
+            // Create header
+            const header = document.createElement('div');
+            header.className = 'recommendations-header';
+            header.innerHTML = `<h3>${recommendations.message}</h3>`;
+            container.appendChild(header);
+            
+            // Create recommendations list
+            const list = document.createElement('div');
+            list.className = 'recommendations-list';
+            
+            recommendations.recommendations.forEach(rec => {
+                const item = document.createElement('div');
+                item.className = 'recommendation-item';
+                
+                let detailsHtml = '';
+                if (rec.currentTick !== undefined) {
+                    detailsHtml = `
+                        <div class="recommendation-details">
+                            <p>Current tick: ${rec.currentTick}</p>
+                            <p>Current range: ${rec.lowerTick} to ${rec.upperTick}</p>
+                            <p>Recommended range: ${rec.newLowerTick} to ${rec.newUpperTick}</p>
+                            <p>Estimated APY improvement: +${(rec.estimatedAPY - rec.apy24h).toFixed(1)}%</p>
+                        </div>
+                    `;
+                }
+                
+                let actionButton = '';
+                if (rec.location.toLowerCase() === 'orca') {
+                    actionButton = `
+                        <button onclick="executeRebalance('${rec.positionAddress}', ${rec.newLowerTick}, ${rec.newUpperTick})" class="action-button">
+                            Rebalance Now
+                        </button>
+                    `;
+                }
+                
+                item.innerHTML = `
+                    <div class="recommendation-header">
+                        <h4>${rec.pool} (${rec.location})</h4>
+                        <span class="recommendation-reason">${rec.reason}</span>
+                    </div>
+                    <p>${rec.recommendation}</p>
+                    ${detailsHtml}
+                    ${actionButton}
+                `;
+                
+                list.appendChild(item);
+            });
+            
+            container.appendChild(list);
+            
+            // Show the container
+            container.style.display = 'block';
+        } catch (error) {
+            console.error('Error displaying rebalancing recommendations:', error);
+        }
+    }
+    
+    // Execute rebalancing for a position
+    async executeRebalance(positionAddress, newLowerTick, newUpperTick) {
+        try {
+            const walletAddress = document.getElementById('walletInput').value;
+            
+            if (!walletAddress) {
+                showNotification('Please connect your wallet or enter an address first', 'warning');
+                return;
+            }
+            
+            // In a real implementation, get the wallet from a connected wallet adapter
+            const wallet = null; // Would be an actual wallet in production
+            
+            // Call API to execute rebalancing
+            const success = await apiManager.executeRebalance(positionAddress, newLowerTick, newUpperTick, wallet);
+            
+            if (success) {
+                showNotification('Rebalancing executed successfully!', 'success');
+                
+                // Refresh positions
+                const positions = await apiManager.getUserPositions(walletAddress);
+                const metrics = apiManager.calculatePortfolioMetrics(positions);
+                this.updatePortfolioStats(metrics);
+                this.renderPools(metrics.pools);
+                
+                // Clear recommendations
+                const container = document.getElementById('rebalancingRecommendations');
+                if (container) {
+                    container.innerHTML = '';
+                    container.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Error executing rebalance:', error);
+            showNotification('Failed to execute rebalancing: ' + error.message, 'error');
+        }
+    }
 }
 
 // Global UI manager instance
@@ -300,6 +475,14 @@ function toggleAI() {
 
 function sendAIMessage() {
     uiManager.sendAIMessage();
+}
+
+function toggleAutoRebalancing() {
+    uiManager.toggleAutoRebalancing();
+}
+
+function executeRebalance(positionAddress, newLowerTick, newUpperTick) {
+    uiManager.executeRebalance(positionAddress, newLowerTick, newUpperTick);
 }
 
 // Handle Enter key in AI input
