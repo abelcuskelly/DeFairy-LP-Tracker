@@ -126,9 +126,15 @@ class HeliusClient {
             
             // Known LP token addresses (in a real implementation, we would have a more comprehensive list)
             const knownLPTokens = {
+                // Orca pools
                 'USDC/SOL': 'orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE',  // Orca USDC/SOL LP token
+                // Raydium pools
                 'WBTC/ETH': '8HoQnePLqPj4M7PUDzfw8e3Ymdwgc7NLGnaTUapubyvu', // Raydium WBTC/ETH LP token
-                'USDT/USDC': 'JAa3gQySiTi8tH3dpkvgztJWHQC1vGXr5m6SQ9LEM55k'  // Raydium USDT/USDC LP token
+                'USDT/USDC': 'JAa3gQySiTi8tH3dpkvgztJWHQC1vGXr5m6SQ9LEM55k',  // Raydium USDT/USDC LP token
+                // Meteora pools
+                'SOL/BONK': 'MET5veiYDzJJyDob89Z6UYGpBKNJ93UfGNU7EUzBcgL', // Meteora SOL/BONK LP token
+                // Drift pools
+                'SOL/USDT': 'DRiFTF8DnuPXvxQiKVT4t6hWeXuLsb1KXzQ9L2emgDx'  // Drift SOL/USDT LP token
             };
             
             for (const account of tokenAccounts) {
@@ -163,6 +169,7 @@ class HeliusClient {
             // In a real implementation, we would fetch this data from a DEX API or compute it
             // For now, simulating with some realistic but mock data
             const mockPoolData = {
+                // Orca pools
                 'orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE': {
                     apy24h: 18.5,
                     feesEarned: 23.45,
@@ -171,6 +178,7 @@ class HeliusClient {
                     token0: { symbol: 'SOL', price: 180.45 },
                     token1: { symbol: 'USDC', price: 1.00 }
                 },
+                // Raydium pools
                 '8HoQnePLqPj4M7PUDzfw8e3Ymdwgc7NLGnaTUapubyvu': {
                     apy24h: 12.3,
                     feesEarned: 45.67,
@@ -186,6 +194,24 @@ class HeliusClient {
                     location: 'Raydium',
                     token0: { symbol: 'USDT', price: 1.00 },
                     token1: { symbol: 'USDC', price: 1.00 }
+                },
+                // Added Meteora pool
+                'MET5veiYDzJJyDob89Z6UYGpBKNJ93UfGNU7EUzBcgL': {
+                    apy24h: 15.2,
+                    feesEarned: 31.45,
+                    inRange: true,
+                    location: 'Meteora',
+                    token0: { symbol: 'SOL', price: 180.45 },
+                    token1: { symbol: 'BONK', price: 0.00001245 }
+                },
+                // Added Drift pool
+                'DRiFTF8DnuPXvxQiKVT4t6hWeXuLsb1KXzQ9L2emgDx': {
+                    apy24h: 22.7,
+                    feesEarned: 67.32,
+                    inRange: true,
+                    location: 'Drift',
+                    token0: { symbol: 'SOL', price: 180.45 },
+                    token1: { symbol: 'USDT', price: 1.00 }
                 }
             };
             

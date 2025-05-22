@@ -107,7 +107,8 @@ class APIManager {
                     feesEarned: poolData.feesEarned,
                     inRange: poolData.inRange,
                     apy24h: poolData.apy24h,
-                    pl24h: totalValue * poolData.apy24h / 365 // Simple estimation
+                    pl24h: totalValue * poolData.apy24h / 365, // Simple estimation
+                    location: poolData.location // Store the location for proper hyperlinks
                 };
                 
                 // Add to appropriate DEX
@@ -181,7 +182,8 @@ class APIManager {
                     feesEarned: 23.45,
                     inRange: true,
                     apy24h: 18.5,
-                    pl24h: 123.45
+                    pl24h: 123.45,
+                    location: 'Orca'
                 }
             ],
             raydium: [
@@ -193,7 +195,8 @@ class APIManager {
                     feesEarned: 45.67,
                     inRange: true,
                     apy24h: 12.3,
-                    pl24h: 234.56
+                    pl24h: 234.56,
+                    location: 'Raydium'
                 },
                 {
                     pool: 'USDT/USDC',
@@ -203,7 +206,8 @@ class APIManager {
                     feesEarned: 12.34,
                     inRange: false,
                     apy24h: 8.7,
-                    pl24h: -12.34
+                    pl24h: -12.34,
+                    location: 'Raydium'
                 }
             ]
         };

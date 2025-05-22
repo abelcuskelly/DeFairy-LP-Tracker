@@ -43,12 +43,27 @@ class UIManager {
         this.currentPools = metrics.pools;
     }
 
+    // Get URL for DEX location
+    getDexUrl(location) {
+        const dexUrls = {
+            'orca': 'https://www.orca.so/portfolio',
+            'raydium': 'https://raydium.io/liquidity-pools/',
+            'meteora': 'https://app.meteora.ag/pools',
+            'drift': 'https://app.drift.trade/pools',
+            'jupiter': 'https://jup.ag/swap'
+        };
+        
+        // Return URL or default to a generic Solana explorer if DEX is unknown
+        return dexUrls[location.toLowerCase()] || 'https://explorer.solana.com';
+    }
+
     // Update location breakdown
     updateLocationBreakdown(pools) {
         const locations = {};
         
         pools.forEach(pool => {
-            const location = pool.pool.includes('SOL') ? 'Orca' : 'Raydium'; // Simple logic for demo
+            // Use the pool's actual location property, with fallback to simple detection
+            const location = pool.location || (pool.pool.includes('SOL') ? 'Orca' : 'Raydium');
             if (!locations[location]) {
                 locations[location] = { balance: 0, count: 0 };
             }
@@ -57,7 +72,8 @@ class UIManager {
         });
         
         const locationHTML = Object.entries(locations).map(([name, data]) => {
-            const url = name === 'Orca' ? 'https://www.orca.so/portfolio' : 'https://raydium.io/liquidity-pools/';
+            // Use the getDexUrl helper for consistent URL mapping
+            const url = this.getDexUrl(name);
             return `<a href="${url}" class="location-link" target="_blank">${name}</a>: ${this.formatCurrency(data.balance)} (${data.count} pools)`;
         }).join('<br>');
         
@@ -81,6 +97,9 @@ class UIManager {
         container.innerHTML = '';
         
         pools.forEach((pool, index) => {
+            // Determine pool location with more reliable method
+            const location = pool.location || (pool.pool.includes('SOL') ? 'Orca' : 'Raydium');
+            
             const poolElement = document.createElement('div');
             poolElement.className = 'pool-row fade-in';
             poolElement.innerHTML = `
@@ -98,9 +117,9 @@ class UIManager {
                         <td><span class="success">${this.formatCurrency(pool.feesEarned)}</span></td>
                         <td><span class="${pool.inRange ? 'in-range' : 'out-range'}">${pool.inRange ? 'In Range' : 'Out of Range'}</span></td>
                         <td>
-                            <a href="${pool.pool.includes('SOL') ? 'https://www.orca.so/portfolio' : 'https://raydium.io/liquidity-pools/'}" 
+                            <a href="${this.getDexUrl(location)}" 
                                class="location-link" target="_blank">
-                               ${pool.pool.includes('SOL') ? 'Orca' : 'Raydium'}
+                               ${location}
                             </a>
                         </td>
                     </tr>
