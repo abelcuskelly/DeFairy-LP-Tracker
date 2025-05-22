@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeFairy - Magical LP Portfolio Tracker</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="magic-bg"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-magic"></i>
+            DeFairy
+        </div>
+        <div class="wallet-section">
+            <input type="text" class="wallet-input" placeholder="Enter Solana wallet address..." id="walletAddress">
+            <button class="btn btn-secondary" onclick="connectWallet()">
+                <i class="fas fa-wallet"></i>
+                Connect Phantom
+            </button>
+            <button class="btn btn-primary" onclick="loadPortfolio()">
+                <i class="fas fa-search"></i>
+                Load Portfolio
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- LP Portfolio Section -->
+        <section class="portfolio-section">
+            <div class="section-header">
+                <i class="fas fa-chart-pie"></i>
+                LP Portfolio
+            </div>
+            
+            <div class="portfolio-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalBalance">$0.00</div>
+                    <div class="stat-label">Total Balance</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value" id="profitLoss">$0.00</div>
+                    <div class="stat-label">Profit/Loss (24h)</div>
+                    <div class="expandable" id="plExpandable">
+                        <div class="expandable-header" onclick="toggleExpandable('plExpandable')">
+                            <span>View Details</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="expandable-content">
+                            <div class="time-period">
+                                <span>24 Hours:</span>
+                                <span class="success" id="pl24h">+$0.00</span>
+                            </div>
+                            <div class="time-period">
+                                <span>Week:</span>
+                                <span class="success" id="plWeek">+$0.00</span>
+                            </div>
+                            <div class="time-period">
+                                <span>Month:</span>
+                                <span class="success" id="plMonth">+$0.00</span>
+                            </div>
+                            <div class="time-period">
+                                <span>All Time:</span>
+                                <span class="success" id="plAllTime">+$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value" id="avgApy">0.00%</div>
+                    <div class="stat-label">Average APY (24h)</div>
+                    <div class="expandable" id="apyExpandable">
+                        <div class="expandable-header" onclick="toggleExpandable('apyExpandable')">
+                            <span>View Details</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="expandable-content">
+                            <div class="time-period">
+                                <span>24 Hours:</span>
+                                <span id="apy24h">0.0%</span>
+                            </div>
+                            <div class="time-period">
+                                <span>Week:</span>
+                                <span id="apyWeek">0.0%</span>
+                            </div>
+                            <div class="time-period">
+                                <span>Month:</span>
+                                <span id="apyMonth">0.0%</span>
+                            </div>
+                            <div class="time-period">
+                                <span>All Time:</span>
+                                <span id="apyAllTime">0.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value" id="feesHarvested">$0.00</div>
+                    <div class="stat-label">Fees Harvested (24h)</div>
+                    <div class="expandable" id="feesExpandable">
+                        <div class="expandable-header" onclick="toggleExpandable('feesExpandable')">
+                            <span>View Details</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="expandable-content">
+                            <div class="time-period">
+                                <span>24 Hours:</span>
+                                <span class="success" id="fees24h">$0.00</span>
+                            </div>
+                            <div class="time-period">
+                                <span>Week:</span>
+                                <span class="success" id="feesWeek">$0.00</span>
+                            </div>
+                            <div class="time-period">
+                                <span>Month:</span>
+                                <span class="success" id="feesMonth">$0.00</span>
+                            </div>
+                            <div class="time-period">
+                                <span>All Time:</span>
+                                <span class="success" id="feesAllTime">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value" id="outOfRange">0 / 0</div>
+                    <div class="stat-label" id="outOfRangeLabel">Out of Range (0%)</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value">Locations</div>
+                    <div class="stat-label" id="locationsBreakdown">
+                        <div class="loading"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Your Pools Section -->
+        <section class="pools-section">
+            <div class="section-header">
+                <i class="fas fa-swimming-pool"></i>
+                Your Pools
+            </div>
+            
+            <div class="pool-table-container">
+                <table class="pool-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortPools('pool')">Pool <i class="fas fa-sort"></i></th>
+                            <th onclick="sortPools('balance')">Balance <i class="fas fa-sort"></i></th>
+                            <th onclick="sortPools('pl24h')">P&L (24h) <i class="fas fa-sort"></i></th>
+                            <th onclick="sortPools('apy24h')">APY (24h) <i class="fas fa-sort"></i></th>
+                            <th onclick="sortPools('fees24h')">Fees (24h) <i class="fas fa-sort"></i></th>
+                            <th onclick="sortPools('status')">Status <i class="fas fa-sort"></i></th>
+                            <th onclick="sortPools('location')">Location <i class="fas fa-sort"></i></th>
+                        </tr>
+                    </thead>
+                </table>
+                
+                <div id="poolsContainer">
+                    <div class="loading-pools">
+                        <div class="loading"></div>
+                        <span>Connect wallet or enter address to view pools</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- AI Assistant -->
+    <div class="ai-assistant">
+        <div class="ai-avatar" onclick="toggleAI()">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="ai-chat" id="aiChat">
+            <div class="ai-chat-header">
+                <i class="fas fa-robot" style="color: #4a90e2;"></i>
+                <span style="color: #4a90e2; font-weight: bold;">Fairy AI Assistant</span>
+            </div>
+            <div class="ai-chat-body" id="aiChatBody">
+                <div class="ai-message">
+                    Hi! I'm your magical DeFi assistant! 🧚‍♀️ I can help you optimize your liquidity pools, suggest rebalancing strategies, and answer questions about your yields. What would you like to know?
+                </div>
+            </div>
+            <div class="ai-chat-input">
+                <input type="text" placeholder="Ask me anything..." id="aiInput">
+                <button onclick="sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/wallet.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/ui.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html> 

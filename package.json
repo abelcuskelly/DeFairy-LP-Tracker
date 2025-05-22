@@ -1,41 +1,24 @@
 {
   "name": "defairy",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Magical Solana LP Portfolio Tracker",
+  "main": "index.html",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "vercel-build": "next build"
+    "dev": "serve .",
+    "build": "echo 'Build script here'",
+    "test": "echo 'Test script here'"
   },
   "dependencies": {
+    "@solana/web3.js": "^1.87.6",
     "@solana/wallet-adapter-base": "^0.9.23",
-    "@solana/wallet-adapter-react": "^0.15.35",
-    "@solana/wallet-adapter-react-ui": "^0.9.34",
-    "@solana/wallet-adapter-wallets": "^0.19.23",
-    "@solana/web3.js": "^1.78.5",
-    "@supabase/supabase-js": "^2.38.4",
-    "autoprefixer": "^10.4.16",
-    "chart.js": "^4.4.0",
-    "encoding": "^0.1.13",
-    "framer-motion": "^10.16.4",
-    "next": "13.5.6",
-    "pino": "^8.14.1",
-    "pino-pretty": "^10.2.0",
-    "postcss": "^8.4.31",
-    "react": "^18.2.0",
-    "react-chartjs-2": "^5.2.0",
-    "react-dom": "^18.2.0",
-    "redis": "^4.6.10",
-    "tailwindcss": "^3.3.5"
+    "@solana/wallet-adapter-phantom": "^0.9.24",
+    "@solana/wallet-adapter-wallets": "^0.19.24",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
-    "@types/node": "^20.8.7",
-    "@types/react": "^18.3.21",
-    "@types/react-dom": "^18.3.7",
-    "eslint": "^8.52.0",
-    "eslint-config-next": "13.5.6",
-    "typescript": "^5.8.3"
-  }
+    "serve": "^14.2.1"
+  },
+  "keywords": ["solana", "defi", "liquidity", "portfolio", "tracker"],
+  "author": "DeFairy Team",
+  "license": "MIT"
 }

@@ -1,131 +1,113 @@
-# DeFairy
+# DeFairy - Magical LP Portfolio Tracker
 
-A magical financial dashboard for Solana blockchain liquidity providers. DeFairy tracks and visualizes your liquidity pools, earnings, and performance metrics with a magical fairy-themed interface.
+## Overview
+DeFairy is a magical Solana DeFi liquidity pool portfolio tracker that makes managing your LP positions fun and intuitive. Track your yields, monitor pool ranges, and get AI-powered rebalancing suggestions.
 
 ## Features
+- 🧚‍♀️ Magical themed UI with responsive design
+- 📊 Real-time portfolio tracking and analytics
+- 🔄 Auto-rebalancing suggestions and triggers
+- 🤖 AI assistant for optimization guidance
+- 📱 Mobile-friendly responsive interface
+- 🔗 Phantom wallet integration
+- 📈 Historical P&L and APY tracking
 
-- Connect your Solana wallet to view all your liquidity pools
-- Track total balance, profit/loss, APY, and fees harvested
-- Monitor which pools are in range and which need rebalancing
-- View historical performance data
-- Sort and filter your pools by various metrics
-- Set automatic rebalancing thresholds for your liquidity positions
-- Receive notifications when pools need attention
-- Track performance across different time periods (24h, 7d, 30d, all-time)
+## Development Setup
 
-## User Guide
+### Prerequisites
+- Node.js (v16 or higher)
+- Modern web browser
+- Phantom wallet (for testing)
 
-### Tracking Liquidity Pool Profitability
-
-DeFairy provides comprehensive monitoring of your liquidity positions:
-
-- **Portfolio Summary**: Get an at-a-glance view of your total balance, profit/loss, average APY, and fees harvested across all pools
-- **Time Period Analysis**: Toggle between different time periods (24h, 7d, 30d, all-time) to analyze performance trends
-- **Pool-by-Pool Breakdown**: Examine detailed metrics for each of your liquidity pools, including:
-  - Current balance and token composition
-  - Profit or loss (both absolute value and percentage)
-  - APY calculation based on fees and price movement
-  - Range status (whether your position is actively earning fees)
-  - Location (which DEX the pool is on)
-
-### Automatic Rebalancing
-
-One of DeFairy's most powerful features is the ability to set up automatic rebalancing for your liquidity positions:
-
-1. **Token Ratio Thresholds**: Set specific ratios at which you want your position to rebalance
-   - Example: Rebalance a SOL/USDC pool when the ratio shifts more than 10% from your target
-   
-2. **Price-Based Triggers**: Create price targets for either token in your pair
-   - Example: Rebalance when SOL reaches $150 or drops below $80
-   
-3. **Smart Contract Integration**: Our secure smart contracts execute the rebalancing based on your parameters
-   - Gas-optimized to minimize transaction costs
-   - Configurable slippage tolerance
-   - Optional safety limits to prevent execution during extreme volatility
-
-4. **Notification System**: Receive alerts before and after rebalancing occurs
-   - Email, browser, or wallet notifications available
-   - Detailed transaction reports
-
-## Components and Architecture
-
-### Frontend Components
-
-- **WalletConnectionProvider**: Handles wallet connectivity using Solana wallet adapters
-- **Header**: Navigation and wallet connection status
-- **PortfolioSummary**: Displays aggregate portfolio metrics
-- **PoolsList**: Interactive table of all pools with sorting and filtering
-- **RebalancingSettings** (coming soon): Interface for configuring automatic rebalancing thresholds
-
-### Backend Services
-
-- **Blockchain Data Service**: Fetches and processes on-chain data from Solana
-- **Analytics Engine**: Calculates performance metrics, APY, and optimal ranges
-- **Notification Service**: Manages user alerts and communications
-- **Rebalancing Service**: Interfaces with smart contracts to execute position adjustments
-
-## Tech Stack
-
-- Next.js for the frontend and API routes
-- Tailwind CSS for styling with custom fairy theme
-- Supabase for persistent storage
-- Redis for caching blockchain data
-- Solana Web3.js for blockchain connectivity
-- Framer Motion for magical animations and transitions
-
-## Prerequisites
-
-- Node.js (v16 or later)
-- npm or yarn
-- Solana wallet (Phantom, Solflare, etc.)
-
-## Setup and Installation
-
-1. Clone the repository
+### Installation
+1. Clone/create the project structure as shown above
 2. Install dependencies:
-   ```
+   ```bash
    npm install
    ```
-3. Set up environment variables (see `.env.example`)
-4. Run the development server:
-   ```
+3. Start development server:
+   ```bash
    npm run dev
    ```
+4. Open `http://localhost:3000` in your browser
 
-## Environment Variables
-
-Create a `.env.local` file with the following variables:
-
+### Project Structure
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://zuvecrpcenaemfeqzunu.supabase.co 
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dmVjcnBjZW5hZW1mZXF6dW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0NzI1MTIsImV4cCI6MjA2MzA0ODUxMn0.Pg-0XkcHWHz2aoLcrdAnXt52E1eW-Wre1MNZxj-MIQQ
-NEXT_PUBLIC_SOLANA_RPC_URL=youhttps://api.mainnet-beta.solana.com/r_solana_rpc_url
-REDIS_URL=redis-11525.c80.us-east-1-2.ec2.redns.redis-cloud.com:11525
+defairy/
+├── index.html              # Main HTML file
+├── styles/main.css         # All CSS styles
+├── scripts/
+│   ├── main.js            # Main app logic
+│   ├── wallet.js          # Wallet management
+│   ├── api.js             # API calls and data management
+│   └── ui.js              # UI management and helpers
+├── package.json           # Dependencies and scripts
+└── README.md             # This file
 ```
+
+## API Integration TODOs
+
+### High Priority
+1. **Real API Integration**
+   - Replace mock data in `api.js` with actual Jupiter/Helius calls
+   - Implement proper error handling and retry logic
+   - Add rate limiting and caching
+
+2. **Solana Program Integration**
+   - Connect to Orca and Raydium programs
+   - Fetch real liquidity positions
+   - Calculate actual P&L and fees
+
+3. **Historical Data**
+   - Implement data storage for historical tracking
+   - Add time-series calculations for APY trends
+   - Store user position snapshots
+
+### Medium Priority
+4. **Auto-Rebalancing Logic**
+   - Implement price deviation triggers
+   - Add token ratio monitoring
+   - Create time-based rebalancing
+
+5. **Enhanced AI Assistant**
+   - Connect to actual AI service
+   - Add more sophisticated guidance
+   - Implement learning from user behavior
+
+### Low Priority
+6. **Additional Features**
+   - More wallet support (Solflare, Backpack)
+   - Export functionality
+   - Advanced charting
+
+## Development Notes
+
+### File Organization
+- Keep all styles in `styles/main.css`
+- Separate JavaScript functionality into logical modules
+- Use consistent naming conventions
+- Add proper error handling throughout
+
+### Code Style
+- Use ES6+ features consistently
+- Implement proper async/await patterns
+- Add comprehensive error handling
+- Use meaningful variable and function names
+
+### Testing
+- Test with various wallet states
+- Verify responsive design on different devices
+- Test API failure scenarios
+- Validate input handling
 
 ## Deployment
+1. Build the project for production
+2. Deploy static files to hosting service
+3. Configure environment variables for API keys
+4. Set up monitoring and analytics
 
-The application is deployed on Vercel. To deploy your own instance:
-
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in the Vercel dashboard
-3. Deploy with the following build settings:
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-   - Install Command: `npm install`
-
-## Smart Contract Integration
-
-The rebalancing functionality requires interaction with our smart contracts on Solana:
-
-1. The contracts monitor price feeds and pool ratios in real-time
-2. When user-defined thresholds are met, the contract initiates a rebalancing transaction
-3. Positions are adjusted to optimal ranges based on current market conditions
-4. Transaction details are recorded on-chain and synchronized with the DeFairy interface
-
-## Future Development
-
-- Mobile application with push notifications
-- Advanced analytics dashboard with machine learning insights
-- Integration with additional DEXes across multiple blockchains
-- Yield optimization strategies with automated fee compounding 
+## Contributing
+1. Follow the existing code structure
+2. Test thoroughly before submitting
+3. Update documentation as needed
+4. Use meaningful commit messages 
