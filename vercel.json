@@ -6,6 +6,16 @@
   "outputDirectory": ".",
   "regions": ["sfo1"],
   "env": {
-    "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com/"
-  }
+    "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com/",
+    "OPENAI_API_KEY": "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"
+  },
+  "routes": [
+    {
+      "src": "/api/openai",
+      "dest": "api/openai.js"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
 } 

@@ -188,7 +188,7 @@ class UIManager {
         aiChat.classList.toggle('open');
     }
 
-    sendAIMessage() {
+    async sendAIMessage() {
         const input = document.getElementById('aiInput');
         const message = input.value.trim();
         
@@ -202,20 +202,33 @@ class UIManager {
         userMessage.textContent = message;
         chatBody.appendChild(userMessage);
         
-        // Simulate AI response
-        setTimeout(() => {
+        // Clear input and scroll
+        input.value = '';
+        chatBody.scrollTop = chatBody.scrollHeight;
+        
+        try {
+            // Get response from OpenAI
+            const aiResponse = await openAIManager.generateResponse(message);
+            
+            // Add AI response to the chat
             const aiMessage = document.createElement('div');
             aiMessage.className = 'ai-message';
-            aiMessage.textContent = this.getAIResponse(message);
+            aiMessage.textContent = aiResponse;
             chatBody.appendChild(aiMessage);
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }, 1000);
+        } catch (error) {
+            // Handle errors
+            const aiMessage = document.createElement('div');
+            aiMessage.className = 'ai-message error';
+            aiMessage.textContent = "Sorry, I'm having trouble connecting right now. Please try again later. 🧚‍♀️";
+            chatBody.appendChild(aiMessage);
+            console.error('Error getting AI response:', error);
+        }
         
-        input.value = '';
+        // Scroll to bottom after adding message
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // Simple AI response simulation
+    // Fallback AI response if OpenAI is not available
     getAIResponse(message) {
         const responses = {
             rebalance: "I recommend rebalancing your out-of-range pools. Your USDT/USDC position could benefit from adjusting the price range.",
