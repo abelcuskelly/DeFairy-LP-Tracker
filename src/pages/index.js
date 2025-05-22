@@ -58,6 +58,13 @@ export default function Home() {
         <title>DeFairy - Magical LP Portfolio Tracker</title>
         <meta name="description" content="Track your Solana liquidity positions magically" />
         <link rel="icon" href="/favicon.ico" />
+        <style jsx global>{`
+          .fa-magic, .fa-wallet, .fa-search, .fa-chart-pie, .fa-swimming-pool, .fa-coins, .fa-robot, .fa-chevron-down, .fa-paper-plane, .fa-sort {
+            font-size: inherit !important;
+            width: auto !important;
+            height: auto !important;
+          }
+        `}</style>
       </Head>
 
       <div className="magic-bg"></div>
