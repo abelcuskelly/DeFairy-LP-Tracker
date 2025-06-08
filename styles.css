@@ -1,0 +1,122 @@
+/* Notification Settings Modal */
+.notification-modal {
+    max-width: 500px;
+}
+
+/* P&L Breakdown Styles */
+.pl24h-info {
+    margin-left: 5px;
+    font-size: 0.8em;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.pl24h-info:hover {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.pl24h-modal {
+    max-width: 600px;
+}
+
+.pl24h-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.breakdown-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.breakdown-item.total {
+    background: rgba(76, 175, 80, 0.1);
+    border-left-color: var(--success-color);
+}
+
+.breakdown-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.breakdown-label i {
+    width: 16px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.breakdown-value {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-left: 24px;
+}
+
+.breakdown-description {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-left: 24px;
+    font-style: italic;
+}
+
+.breakdown-separator {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 10px 0;
+}
+
+.pl24h-formula {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.pl24h-formula h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pl24h-formula code {
+    display: block;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-color);
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Responsive adjustments for P&L modal */
+@media (max-width: 768px) {
+    .pl24h-modal {
+        max-width: 95vw;
+        margin: 10px;
+    }
+    
+    .breakdown-item {
+        padding: 12px;
+    }
+    
+    .breakdown-value {
+        font-size: 1.1em;
+    }
+    
+    .pl24h-formula {
+        padding: 12px;
+    }
+} 

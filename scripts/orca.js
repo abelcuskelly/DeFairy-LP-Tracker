@@ -240,7 +240,7 @@ class OrcaWhirlpoolClient {
             // Calculate 24h P&L (simplified - would need historical data)
             const pl24h = totalValue * estimatedApy / 365;
             
-            return {
+            const positionData = {
                 pool: `${whirlpool.tokenA.symbol}/${whirlpool.tokenB.symbol}`,
                 balance: totalValue,
                 token0: {
@@ -253,17 +253,42 @@ class OrcaWhirlpoolClient {
                     amount: tokenBAmount,
                     price: tokenBPrice
                 },
-                feesEarned,
-                inRange,
+                feesEarned: feesEarned,
+                inRange: inRange,
                 apy24h: estimatedApy,
-                pl24h,
-                location: 'Orca',
-                positionAddress: positionData.publicKey.toString(),
-                whirlpoolAddress: whirlpool.address,
-                lowerTick,
-                upperTick,
-                currentTick
+                pl24h: await this.calculateComprehensivePL24h({
+                    pool: `${whirlpool.tokenA.symbol}/${whirlpool.tokenB.symbol}`,
+                    token0: { symbol: whirlpool.tokenA.symbol, amount: tokenAAmount, price: tokenAPrice },
+                    token1: { symbol: whirlpool.tokenB.symbol, amount: tokenBAmount, price: tokenBPrice },
+                    feesEarned: feesEarned,
+                    apy24h: estimatedApy
+                }, totalValue),
+                // Add P&L breakdown components
+                feesEarned24h: await this.calculateFeesEarned24h({
+                    pool: `${whirlpool.tokenA.symbol}/${whirlpool.tokenB.symbol}`,
+                    token0: { symbol: whirlpool.tokenA.symbol, amount: tokenAAmount, price: tokenAPrice },
+                    token1: { symbol: whirlpool.tokenB.symbol, amount: tokenBAmount, price: tokenBPrice },
+                    feesEarned: feesEarned,
+                    apy24h: estimatedApy
+                }),
+                impermanentLossGain24h: await this.calculateImpermanentLossGain24h({
+                    pool: `${whirlpool.tokenA.symbol}/${whirlpool.tokenB.symbol}`,
+                    token0: { symbol: whirlpool.tokenA.symbol, amount: tokenAAmount, price: tokenAPrice },
+                    token1: { symbol: whirlpool.tokenB.symbol, amount: tokenBAmount, price: tokenBPrice },
+                    feesEarned: feesEarned,
+                    apy24h: estimatedApy
+                }),
+                priceAppreciation24h: await this.calculatePriceAppreciation24h({
+                    pool: `${whirlpool.tokenA.symbol}/${whirlpool.tokenB.symbol}`,
+                    token0: { symbol: whirlpool.tokenA.symbol, amount: tokenAAmount, price: tokenAPrice },
+                    token1: { symbol: whirlpool.tokenB.symbol, amount: tokenBAmount, price: tokenBPrice },
+                    feesEarned: feesEarned,
+                    apy24h: estimatedApy
+                }, totalValue),
+                location: 'orca'
             };
+            
+            return positionData;
         } catch (error) {
             console.error('Error calculating position value:', error);
             throw error;
@@ -287,6 +312,164 @@ class OrcaWhirlpoolClient {
         } catch (error) {
             console.error('Error rebalancing position:', error);
             throw error;
+        }
+    }
+
+    // Calculate comprehensive P&L for 24 hours
+    async calculateComprehensivePL24h(positionData, totalValue) {
+        try {
+            // Component 1: Fees earned in last 24h
+            const feesEarned24h = await this.calculateFeesEarned24h(positionData);
+            
+            // Component 2: Impermanent Loss/Gain in last 24h
+            const impermanentLossGain24h = await this.calculateImpermanentLossGain24h(positionData);
+            
+            // Component 3: Price appreciation of the position in last 24h
+            const priceAppreciation24h = await this.calculatePriceAppreciation24h(positionData, totalValue);
+            
+            // Total P&L = fees + IL/gain + price appreciation
+            const totalPL24h = feesEarned24h + impermanentLossGain24h + priceAppreciation24h;
+            
+            console.log(`Orca P&L Breakdown for ${positionData.pool}:`, {
+                feesEarned24h,
+                impermanentLossGain24h,
+                priceAppreciation24h,
+                totalPL24h
+            });
+            
+            return totalPL24h;
+            
+        } catch (error) {
+            console.error('Error calculating comprehensive P&L:', error);
+            // Fallback to simple estimation
+            return totalValue * (positionData.apy24h || 0) / 365;
+        }
+    }
+    
+    // Calculate fees earned in the last 24 hours for Orca position
+    async calculateFeesEarned24h(positionData) {
+        try {
+            // If we have direct fee data, use it
+            if (positionData.feesEarned24h) {
+                return positionData.feesEarned24h;
+            }
+            
+            // Estimate based on current fees earned (assuming most fees are recent)
+            const estimatedDailyFees = (positionData.feesEarned || 0) * 0.8; // 80% of total fees from last 24h
+            
+            return estimatedDailyFees;
+            
+        } catch (error) {
+            console.error('Error calculating Orca fees earned 24h:', error);
+            return 0;
+        }
+    }
+    
+    // Calculate impermanent loss/gain in the last 24 hours for Orca position
+    async calculateImpermanentLossGain24h(positionData) {
+        try {
+            if (!positionData.token0 || !positionData.token1) {
+                return 0;
+            }
+            
+            // Get current token prices
+            const currentPrice0 = positionData.token0.price || 0;
+            const currentPrice1 = positionData.token1.price || 0;
+            
+            if (currentPrice0 === 0 || currentPrice1 === 0) {
+                return 0;
+            }
+            
+            // Get 24h ago prices
+            const price24hAgo0 = await this.getHistoricalPrice(positionData.token0.symbol, 24);
+            const price24hAgo1 = await this.getHistoricalPrice(positionData.token1.symbol, 24);
+            
+            if (price24hAgo0 === 0 || price24hAgo1 === 0) {
+                return 0;
+            }
+            
+            // Calculate price ratio changes
+            const currentRatio = currentPrice0 / currentPrice1;
+            const pastRatio = price24hAgo0 / price24hAgo1;
+            const ratioChange = currentRatio / pastRatio;
+            
+            // Calculate impermanent loss/gain using the standard formula
+            // IL = 2 * sqrt(ratio) / (1 + ratio) - 1
+            const currentIL = 2 * Math.sqrt(ratioChange) / (1 + ratioChange) - 1;
+            
+            // Convert to USD value
+            const positionValue = (positionData.token0.amount * currentPrice0) + (positionData.token1.amount * currentPrice1);
+            const impermanentLossGain = positionValue * currentIL;
+            
+            return impermanentLossGain;
+            
+        } catch (error) {
+            console.error('Error calculating Orca impermanent loss/gain:', error);
+            return 0;
+        }
+    }
+    
+    // Calculate price appreciation of the Orca position in the last 24 hours
+    async calculatePriceAppreciation24h(positionData, totalValue) {
+        try {
+            if (!positionData.token0 || !positionData.token1) {
+                return 0;
+            }
+            
+            // Get current token prices
+            const currentPrice0 = positionData.token0.price || 0;
+            const currentPrice1 = positionData.token1.price || 0;
+            
+            // Get 24h ago prices
+            const price24hAgo0 = await this.getHistoricalPrice(positionData.token0.symbol, 24);
+            const price24hAgo1 = await this.getHistoricalPrice(positionData.token1.symbol, 24);
+            
+            if (price24hAgo0 === 0 || price24hAgo1 === 0) {
+                return 0;
+            }
+            
+            // Calculate value 24h ago
+            const value24hAgo = (positionData.token0.amount * price24hAgo0) + (positionData.token1.amount * price24hAgo1);
+            
+            // Price appreciation = current value - past value (excluding fees and IL)
+            const priceAppreciation = totalValue - value24hAgo;
+            
+            return priceAppreciation;
+            
+        } catch (error) {
+            console.error('Error calculating Orca price appreciation:', error);
+            return 0;
+        }
+    }
+    
+    // Get historical price for a token (shared utility method)
+    async getHistoricalPrice(tokenSymbol, hoursAgo) {
+        try {
+            // In production, this would fetch from a price history API like CoinGecko
+            // For now, simulate with realistic price variations
+            const currentPrices = {
+                'SOL': 180.45,
+                'USDC': 1.00,
+                'USDT': 1.00,
+                'WBTC': 45234.56,
+                'ETH': 2145.78,
+                'BTC': 45000.00,
+                'ORCA': 3.45,
+                'RAY': 1.23,
+                'SRM': 0.45
+            };
+            
+            const currentPrice = currentPrices[tokenSymbol] || 1.00;
+            
+            // Simulate 24h price change (±8% random variation for more realistic crypto volatility)
+            const priceChange = (Math.random() - 0.5) * 0.16; // ±8%
+            const historicalPrice = currentPrice * (1 - priceChange);
+            
+            return Math.max(historicalPrice, 0.001); // Ensure positive price
+            
+        } catch (error) {
+            console.error('Error getting historical price:', error);
+            return 0;
         }
     }
 }

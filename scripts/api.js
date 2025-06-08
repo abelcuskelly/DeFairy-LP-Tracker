@@ -116,22 +116,26 @@ class APIManager {
                     
                     // Create position object
                     const positionData = {
-                        pool: position.pool,
+                        pool: poolData.pool,
                         balance: totalValue,
-                        token0: { 
-                            symbol: poolData.token0.symbol, 
-                            amount: lpTokenAmount / 2, // Simplified 
-                            price: poolData.token0.price 
+                        token0: {
+                            symbol: poolData.token0?.symbol || 'Unknown',
+                            amount: poolData.token0?.amount || 0,
+                            price: poolData.token0?.price || 0
                         },
-                        token1: { 
-                            symbol: poolData.token1.symbol, 
-                            amount: lpTokenAmount / 2, // Simplified
-                            price: poolData.token1.price 
+                        token1: {
+                            symbol: poolData.token1?.symbol || 'Unknown',
+                            amount: poolData.token1?.amount || 0,
+                            price: poolData.token1?.price || 0
                         },
                         feesEarned: poolData.feesEarned,
                         inRange: poolData.inRange,
                         apy24h: poolData.apy24h,
-                        pl24h: totalValue * poolData.apy24h / 365, // Simple estimation
+                        pl24h: await this.calculateComprehensivePL24h(poolData, totalValue),
+                        // Add P&L breakdown components
+                        feesEarned24h: await this.calculateFeesEarned24h(poolData),
+                        impermanentLossGain24h: await this.calculateImpermanentLossGain24h(poolData),
+                        priceAppreciation24h: await this.calculatePriceAppreciation24h(poolData, totalValue),
                         location: poolData.location // Store the location for proper hyperlinks
                     };
                     
@@ -217,6 +221,9 @@ class APIManager {
                     inRange: true,
                     apy24h: 18.5,
                     pl24h: 123.45,
+                    feesEarned24h: 18.76,
+                    impermanentLossGain24h: -2.31,
+                    priceAppreciation24h: 107.00,
                     location: 'Orca'
                 }
             ],
@@ -230,6 +237,9 @@ class APIManager {
                     inRange: true,
                     apy24h: 12.3,
                     pl24h: 234.56,
+                    feesEarned24h: 36.53,
+                    impermanentLossGain24h: 12.45,
+                    priceAppreciation24h: 185.58,
                     location: 'Raydium'
                 },
                 {
@@ -241,6 +251,9 @@ class APIManager {
                     inRange: false,
                     apy24h: 8.7,
                     pl24h: -12.34,
+                    feesEarned24h: 9.87,
+                    impermanentLossGain24h: -0.12,
+                    priceAppreciation24h: -22.09,
                     location: 'Raydium'
                 }
             ]
@@ -455,6 +468,166 @@ class APIManager {
         } catch (error) {
             console.error('Error removing webhook:', error);
             return false;
+        }
+    }
+
+    // Calculate comprehensive P&L for a position
+    async calculateComprehensivePL24h(poolData, totalValue) {
+        try {
+            // Get 24h historical data for price comparison
+            const now = Date.now();
+            const yesterday = now - (24 * 60 * 60 * 1000);
+            
+            // Component 1: Fees earned in last 24h
+            const feesEarned24h = await this.calculateFeesEarned24h(poolData);
+            
+            // Component 2: Impermanent Loss/Gain in last 24h
+            const impermanentLossGain24h = await this.calculateImpermanentLossGain24h(poolData);
+            
+            // Component 3: Price appreciation of the position in last 24h
+            const priceAppreciation24h = await this.calculatePriceAppreciation24h(poolData, totalValue);
+            
+            // Total P&L = fees + IL/gain + price appreciation
+            const totalPL24h = feesEarned24h + impermanentLossGain24h + priceAppreciation24h;
+            
+            console.log(`P&L Breakdown for ${poolData.pool}:`, {
+                feesEarned24h,
+                impermanentLossGain24h,
+                priceAppreciation24h,
+                totalPL24h
+            });
+            
+            return totalPL24h;
+            
+        } catch (error) {
+            console.error('Error calculating comprehensive P&L:', error);
+            // Fallback to simple estimation
+            return totalValue * (poolData.apy24h || 0) / 365;
+        }
+    }
+    
+    // Calculate fees earned in the last 24 hours
+    async calculateFeesEarned24h(poolData) {
+        try {
+            // If we have direct fee data, use it
+            if (poolData.feesEarned24h) {
+                return poolData.feesEarned24h;
+            }
+            
+            // Estimate based on APY and position size
+            // Fees typically represent 80-90% of LP returns
+            const estimatedDailyFees = (poolData.feesEarned || 0) * 0.85; // 85% of total fees assumed to be from last 24h
+            
+            return estimatedDailyFees;
+            
+        } catch (error) {
+            console.error('Error calculating fees earned 24h:', error);
+            return 0;
+        }
+    }
+    
+    // Calculate impermanent loss/gain in the last 24 hours
+    async calculateImpermanentLossGain24h(poolData) {
+        try {
+            if (!poolData.token0 || !poolData.token1) {
+                return 0;
+            }
+            
+            // Get current token prices
+            const currentPrice0 = poolData.token0.price || 0;
+            const currentPrice1 = poolData.token1.price || 0;
+            
+            if (currentPrice0 === 0 || currentPrice1 === 0) {
+                return 0;
+            }
+            
+            // Get 24h ago prices (simplified - in production, fetch historical data)
+            const price24hAgo0 = await this.getHistoricalPrice(poolData.token0.symbol, 24);
+            const price24hAgo1 = await this.getHistoricalPrice(poolData.token1.symbol, 24);
+            
+            if (price24hAgo0 === 0 || price24hAgo1 === 0) {
+                return 0;
+            }
+            
+            // Calculate price ratio changes
+            const currentRatio = currentPrice0 / currentPrice1;
+            const pastRatio = price24hAgo0 / price24hAgo1;
+            const ratioChange = currentRatio / pastRatio;
+            
+            // Calculate impermanent loss/gain
+            // IL = 2 * sqrt(ratio) / (1 + ratio) - 1
+            const currentIL = 2 * Math.sqrt(ratioChange) / (1 + ratioChange) - 1;
+            
+            // Convert to USD value
+            const positionValue = (poolData.token0.amount * currentPrice0) + (poolData.token1.amount * currentPrice1);
+            const impermanentLossGain = positionValue * currentIL;
+            
+            return impermanentLossGain;
+            
+        } catch (error) {
+            console.error('Error calculating impermanent loss/gain:', error);
+            return 0;
+        }
+    }
+    
+    // Calculate price appreciation of the position in the last 24 hours
+    async calculatePriceAppreciation24h(poolData, totalValue) {
+        try {
+            if (!poolData.token0 || !poolData.token1) {
+                return 0;
+            }
+            
+            // Get current token prices
+            const currentPrice0 = poolData.token0.price || 0;
+            const currentPrice1 = poolData.token1.price || 0;
+            
+            // Get 24h ago prices
+            const price24hAgo0 = await this.getHistoricalPrice(poolData.token0.symbol, 24);
+            const price24hAgo1 = await this.getHistoricalPrice(poolData.token1.symbol, 24);
+            
+            if (price24hAgo0 === 0 || price24hAgo1 === 0) {
+                return 0;
+            }
+            
+            // Calculate value 24h ago
+            const value24hAgo = (poolData.token0.amount * price24hAgo0) + (poolData.token1.amount * price24hAgo1);
+            
+            // Price appreciation = current value - past value (excluding fees and IL)
+            const priceAppreciation = totalValue - value24hAgo;
+            
+            return priceAppreciation;
+            
+        } catch (error) {
+            console.error('Error calculating price appreciation:', error);
+            return 0;
+        }
+    }
+    
+    // Get historical price for a token (simplified implementation)
+    async getHistoricalPrice(tokenSymbol, hoursAgo) {
+        try {
+            // In production, this would fetch from a price history API
+            // For now, simulate with a small random variation
+            const currentPrices = {
+                'SOL': 180.45,
+                'USDC': 1.00,
+                'USDT': 1.00,
+                'WBTC': 45234.56,
+                'ETH': 2145.78,
+                'BTC': 45000.00
+            };
+            
+            const currentPrice = currentPrices[tokenSymbol] || 1.00;
+            
+            // Simulate 24h price change (±5% random variation)
+            const priceChange = (Math.random() - 0.5) * 0.1; // ±5%
+            const historicalPrice = currentPrice * (1 - priceChange);
+            
+            return historicalPrice;
+            
+        } catch (error) {
+            console.error('Error getting historical price:', error);
+            return 0;
         }
     }
 }

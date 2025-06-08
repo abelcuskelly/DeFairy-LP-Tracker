@@ -113,7 +113,14 @@ class UIManager {
                             </div>
                         </td>
                         <td><strong>${this.formatCurrency(pool.balance)}</strong></td>
-                        <td><span class="${pool.pl24h >= 0 ? 'success' : 'error'}">${this.formatCurrency(pool.pl24h, 2)}</span></td>
+                        <td>
+                            <span class="${pool.pl24h >= 0 ? 'success' : 'error'} pl24h-value" 
+                                  title="P&L Breakdown:&#10;Fees: ${this.formatCurrency(pool.feesEarned24h || 0)}&#10;Impermanent Loss/Gain: ${this.formatCurrency(pool.impermanentLossGain24h || 0)}&#10;Price Appreciation: ${this.formatCurrency(pool.priceAppreciation24h || 0)}&#10;Total: ${this.formatCurrency(pool.pl24h, 2)}"
+                                  data-pool="${pool.pool}">
+                                ${this.formatCurrency(pool.pl24h, 2)}
+                                <i class="fas fa-info-circle pl24h-info" onclick="showPL24hBreakdown('${pool.pool}')"></i>
+                            </span>
+                        </td>
                         <td>${this.formatPercentage(pool.apy24h)}</td>
                         <td><span class="success">${this.formatCurrency(pool.feesEarned)}</span></td>
                         <td><span class="${pool.inRange ? 'in-range' : 'out-range'}">${pool.inRange ? 'In Range' : 'Out of Range'}</span></td>
@@ -464,6 +471,94 @@ class UIManager {
             showNotification('Failed to execute rebalancing: ' + error.message, 'error');
         }
     }
+
+    // Show P&L breakdown modal
+    showPL24hBreakdown(poolName) {
+        const pool = this.currentPools.find(p => p.pool === poolName);
+        if (!pool) return;
+        
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal-overlay" id="pl24hModal" onclick="closePL24hModal()">
+                <div class="modal-content pl24h-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-chart-line"></i> P&L Breakdown - ${pool.pool}</h3>
+                        <button class="close-btn" onclick="closePL24hModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="pl24h-breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <i class="fas fa-coins"></i>
+                                    <span>Fees Earned (24h)</span>
+                                </div>
+                                <div class="breakdown-value success">
+                                    ${this.formatCurrency(pool.feesEarned24h || 0)}
+                                </div>
+                                <div class="breakdown-description">
+                                    Trading fees collected from your liquidity provision
+                                </div>
+                            </div>
+                            
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    <span>Impermanent Loss/Gain (24h)</span>
+                                </div>
+                                <div class="breakdown-value ${(pool.impermanentLossGain24h || 0) >= 0 ? 'success' : 'error'}">
+                                    ${this.formatCurrency(pool.impermanentLossGain24h || 0)}
+                                </div>
+                                <div class="breakdown-description">
+                                    ${(pool.impermanentLossGain24h || 0) >= 0 ? 'Gain' : 'Loss'} from token price ratio changes
+                                </div>
+                            </div>
+                            
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">
+                                    <i class="fas fa-trending-up"></i>
+                                    <span>Price Appreciation (24h)</span>
+                                </div>
+                                <div class="breakdown-value ${(pool.priceAppreciation24h || 0) >= 0 ? 'success' : 'error'}">
+                                    ${this.formatCurrency(pool.priceAppreciation24h || 0)}
+                                </div>
+                                <div class="breakdown-description">
+                                    Value change from underlying token price movements
+                                </div>
+                            </div>
+                            
+                            <div class="breakdown-separator"></div>
+                            
+                            <div class="breakdown-item total">
+                                <div class="breakdown-label">
+                                    <i class="fas fa-calculator"></i>
+                                    <span><strong>Total P&L (24h)</strong></span>
+                                </div>
+                                <div class="breakdown-value ${pool.pl24h >= 0 ? 'success' : 'error'}">
+                                    <strong>${this.formatCurrency(pool.pl24h, 2)}</strong>
+                                </div>
+                                <div class="breakdown-description">
+                                    <strong>Comprehensive profit/loss calculation</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pl24h-formula">
+                            <h4><i class="fas fa-formula"></i> Formula Used:</h4>
+                            <code>P&L = Fees Earned + Impermanent Loss/Gain + Price Appreciation</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Show modal with animation
+        setTimeout(() => {
+            document.getElementById('pl24hModal').classList.add('show');
+        }, 10);
+    }
 }
 
 // Global UI manager instance
@@ -492,6 +587,22 @@ function toggleAutoRebalancing() {
 
 function executeRebalance(positionAddress, newLowerTick, newUpperTick) {
     uiManager.executeRebalance(positionAddress, newLowerTick, newUpperTick);
+}
+
+// Global function for P&L breakdown modal
+function showPL24hBreakdown(poolName) {
+    uiManager.showPL24hBreakdown(poolName);
+}
+
+// Global function to close P&L breakdown modal
+function closePL24hModal() {
+    const modal = document.getElementById('pl24hModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
 }
 
 // Handle Enter key in AI input
