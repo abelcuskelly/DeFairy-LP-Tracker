@@ -139,6 +139,16 @@ class APIManager {
                         location: poolData.location // Store the location for proper hyperlinks
                     };
                     
+                    // Calculate P&L for multiple time periods
+                    const timePeriods = ['1h', '7d', '30d'];
+                    for (const period of timePeriods) {
+                        const plData = await this.calculateComprehensivePL(poolData, totalValue, period);
+                        positionData[`pl${period}`] = plData.total;
+                        positionData[`feesEarned${period}`] = plData.feesEarned;
+                        positionData[`impermanentLossGain${period}`] = plData.impermanentLossGain;
+                        positionData[`priceAppreciation${period}`] = plData.priceAppreciation;
+                    }
+                    
                     // Add to appropriate DEX
                     if (poolData.location.toLowerCase() === 'orca') {
                         positions.orca.push(positionData);
@@ -224,6 +234,21 @@ class APIManager {
                     feesEarned24h: 18.76,
                     impermanentLossGain24h: -2.31,
                     priceAppreciation24h: 107.00,
+                    // 1 hour P&L
+                    pl1h: 5.14,
+                    feesEarned1h: 0.78,
+                    impermanentLossGain1h: -0.10,
+                    priceAppreciation1h: 4.46,
+                    // 7 day P&L
+                    pl7d: 864.15,
+                    feesEarned7d: 131.32,
+                    impermanentLossGain7d: -16.17,
+                    priceAppreciation7d: 749.00,
+                    // 30 day P&L
+                    pl30d: 3703.50,
+                    feesEarned30d: 562.80,
+                    impermanentLossGain30d: -69.30,
+                    priceAppreciation30d: 3210.00,
                     location: 'Orca'
                 }
             ],
@@ -240,6 +265,21 @@ class APIManager {
                     feesEarned24h: 36.53,
                     impermanentLossGain24h: 12.45,
                     priceAppreciation24h: 185.58,
+                    // 1 hour P&L
+                    pl1h: 9.77,
+                    feesEarned1h: 1.52,
+                    impermanentLossGain1h: 0.52,
+                    priceAppreciation1h: 7.73,
+                    // 7 day P&L
+                    pl7d: 1641.92,
+                    feesEarned7d: 255.71,
+                    impermanentLossGain7d: 87.15,
+                    priceAppreciation7d: 1299.06,
+                    // 30 day P&L
+                    pl30d: 7036.80,
+                    feesEarned30d: 1095.90,
+                    impermanentLossGain30d: 373.50,
+                    priceAppreciation30d: 5567.40,
                     location: 'Raydium'
                 },
                 {
@@ -254,6 +294,21 @@ class APIManager {
                     feesEarned24h: 9.87,
                     impermanentLossGain24h: -0.12,
                     priceAppreciation24h: -22.09,
+                    // 1 hour P&L
+                    pl1h: -0.51,
+                    feesEarned1h: 0.41,
+                    impermanentLossGain1h: -0.01,
+                    priceAppreciation1h: -0.91,
+                    // 7 day P&L
+                    pl7d: -86.38,
+                    feesEarned7d: 69.09,
+                    impermanentLossGain7d: -0.84,
+                    priceAppreciation7d: -154.63,
+                    // 30 day P&L
+                    pl30d: -370.20,
+                    feesEarned30d: 296.10,
+                    impermanentLossGain30d: -3.60,
+                    priceAppreciation30d: -662.70,
                     location: 'Raydium'
                 }
             ]
@@ -506,6 +561,76 @@ class APIManager {
         }
     }
     
+    // Generic comprehensive P&L calculation for any time period
+    async calculateComprehensivePL(poolData, totalValue, timePeriod = '24h') {
+        try {
+            // Convert time period to hours
+            const hoursMap = {
+                '1h': 1,
+                '24h': 24,
+                '7d': 168,
+                '30d': 720,
+                '1y': 8760,
+                'all': null // Special case for all-time
+            };
+            
+            const hours = hoursMap[timePeriod] || 24;
+            
+            // Component 1: Fees earned in the time period
+            const feesEarned = await this.calculateFeesEarnedForPeriod(poolData, hours);
+            
+            // Component 2: Impermanent Loss/Gain in the time period
+            const impermanentLossGain = await this.calculateImpermanentLossGainForPeriod(poolData, hours);
+            
+            // Component 3: Price appreciation in the time period
+            const priceAppreciation = await this.calculatePriceAppreciationForPeriod(poolData, totalValue, hours);
+            
+            // Total P&L = fees + IL/gain + price appreciation
+            const totalPL = feesEarned + impermanentLossGain + priceAppreciation;
+            
+            console.log(`P&L Breakdown for ${poolData.pool} (${timePeriod}):`, {
+                feesEarned,
+                impermanentLossGain,
+                priceAppreciation,
+                totalPL
+            });
+            
+            return {
+                total: totalPL,
+                feesEarned,
+                impermanentLossGain,
+                priceAppreciation,
+                timePeriod
+            };
+            
+        } catch (error) {
+            console.error(`Error calculating comprehensive P&L for ${timePeriod}:`, error);
+            // Fallback to simple estimation
+            const dailyReturn = totalValue * (poolData.apy24h || 0) / 365;
+            const hoursInPeriod = this.getHoursForPeriod(timePeriod);
+            return {
+                total: dailyReturn * (hoursInPeriod / 24),
+                feesEarned: 0,
+                impermanentLossGain: 0,
+                priceAppreciation: 0,
+                timePeriod
+            };
+        }
+    }
+    
+    // Helper to get hours for a time period
+    getHoursForPeriod(timePeriod) {
+        const hoursMap = {
+            '1h': 1,
+            '24h': 24,
+            '7d': 168,
+            '30d': 720,
+            '1y': 8760,
+            'all': 8760 // Default to 1 year for all-time
+        };
+        return hoursMap[timePeriod] || 24;
+    }
+    
     // Calculate fees earned in the last 24 hours
     async calculateFeesEarned24h(poolData) {
         try {
@@ -629,6 +754,107 @@ class APIManager {
             console.error('Error getting historical price:', error);
             return 0;
         }
+    }
+
+    // Generic calculation methods for any time period
+    async calculateFeesEarnedForPeriod(poolData, hours) {
+        try {
+            if (!hours || hours === null) {
+                // All-time fees
+                return poolData.feesEarned || 0;
+            }
+            
+            // Estimate based on daily fee rate
+            const dailyFeeRate = await this.calculateFeesEarned24h(poolData);
+            const hourlyRate = dailyFeeRate / 24;
+            return hourlyRate * hours;
+            
+        } catch (error) {
+            console.error(`Error calculating fees for ${hours}h period:`, error);
+            return 0;
+        }
+    }
+    
+    async calculateImpermanentLossGainForPeriod(poolData, hours) {
+        try {
+            if (!poolData.token0 || !poolData.token1) {
+                return 0;
+            }
+            
+            // Get current token prices
+            const currentPrice0 = poolData.token0.price || 0;
+            const currentPrice1 = poolData.token1.price || 0;
+            
+            if (currentPrice0 === 0 || currentPrice1 === 0) {
+                return 0;
+            }
+            
+            // Get historical prices for the period
+            const historicalPrice0 = await this.getHistoricalPrice(poolData.token0.symbol, hours);
+            const historicalPrice1 = await this.getHistoricalPrice(poolData.token1.symbol, hours);
+            
+            if (historicalPrice0 === 0 || historicalPrice1 === 0) {
+                return 0;
+            }
+            
+            // Calculate price ratio changes
+            const currentRatio = currentPrice0 / currentPrice1;
+            const pastRatio = historicalPrice0 / historicalPrice1;
+            const ratioChange = currentRatio / pastRatio;
+            
+            // Calculate impermanent loss/gain
+            const currentIL = 2 * Math.sqrt(ratioChange) / (1 + ratioChange) - 1;
+            
+            // Convert to USD value
+            const positionValue = (poolData.token0.amount * currentPrice0) + (poolData.token1.amount * currentPrice1);
+            const impermanentLossGain = positionValue * currentIL;
+            
+            return impermanentLossGain;
+            
+        } catch (error) {
+            console.error(`Error calculating IL for ${hours}h period:`, error);
+            return 0;
+        }
+    }
+    
+    async calculatePriceAppreciationForPeriod(poolData, totalValue, hours) {
+        try {
+            if (!poolData.token0 || !poolData.token1) {
+                return 0;
+            }
+            
+            // Get historical prices
+            const historicalPrice0 = await this.getHistoricalPrice(poolData.token0.symbol, hours);
+            const historicalPrice1 = await this.getHistoricalPrice(poolData.token1.symbol, hours);
+            
+            if (historicalPrice0 === 0 || historicalPrice1 === 0) {
+                return 0;
+            }
+            
+            // Calculate historical value
+            const historicalValue = (poolData.token0.amount * historicalPrice0) + (poolData.token1.amount * historicalPrice1);
+            
+            // Price appreciation = current value - historical value
+            const priceAppreciation = totalValue - historicalValue;
+            
+            return priceAppreciation;
+            
+        } catch (error) {
+            console.error(`Error calculating price appreciation for ${hours}h period:`, error);
+            return 0;
+        }
+    }
+    
+    // Helper to get time period suffix for data keys
+    getTimePeriodSuffix(hours) {
+        const suffixMap = {
+            1: '1h',
+            24: '24h',
+            168: '7d',
+            720: '30d',
+            8760: '1y'
+        };
+        return suffixMap[hours] || `${hours}h`;
     }
 }
 

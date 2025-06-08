@@ -346,6 +346,63 @@ class OrcaWhirlpoolClient {
         }
     }
     
+    // Generic comprehensive P&L calculation for any time period
+    async calculateComprehensivePL(positionData, totalValue, timePeriod = '24h') {
+        try {
+            // Convert time period to hours
+            const hoursMap = {
+                '1h': 1,
+                '24h': 24,
+                '7d': 168,
+                '30d': 720,
+                '1y': 8760,
+                'all': null // Special case for all-time
+            };
+            
+            const hours = hoursMap[timePeriod] || 24;
+            
+            // Component 1: Fees earned in the time period
+            const feesEarned = await this.calculateFeesEarnedForPeriod(positionData, hours);
+            
+            // Component 2: Impermanent Loss/Gain in the time period
+            const impermanentLossGain = await this.calculateImpermanentLossGainForPeriod(positionData, hours);
+            
+            // Component 3: Price appreciation in the time period
+            const priceAppreciation = await this.calculatePriceAppreciationForPeriod(positionData, totalValue, hours);
+            
+            // Total P&L = fees + IL/gain + price appreciation
+            const totalPL = feesEarned + impermanentLossGain + priceAppreciation;
+            
+            console.log(`Orca P&L Breakdown for ${positionData.pool} (${timePeriod}):`, {
+                feesEarned,
+                impermanentLossGain,
+                priceAppreciation,
+                totalPL
+            });
+            
+            return {
+                total: totalPL,
+                feesEarned,
+                impermanentLossGain,
+                priceAppreciation,
+                timePeriod
+            };
+            
+        } catch (error) {
+            console.error(`Error calculating Orca comprehensive P&L for ${timePeriod}:`, error);
+            // Fallback to simple estimation
+            const dailyReturn = totalValue * (positionData.apy24h || 0) / 365;
+            const hoursInPeriod = this.getHoursForPeriod(timePeriod);
+            return {
+                total: dailyReturn * (hoursInPeriod / 24),
+                feesEarned: 0,
+                impermanentLossGain: 0,
+                priceAppreciation: 0,
+                timePeriod
+            };
+        }
+    }
+    
     // Calculate fees earned in the last 24 hours for Orca position
     async calculateFeesEarned24h(positionData) {
         try {
@@ -471,6 +528,108 @@ class OrcaWhirlpoolClient {
             console.error('Error getting historical price:', error);
             return 0;
         }
+    }
+
+    // Generic calculation methods for any time period
+    async calculateFeesEarnedForPeriod(positionData, hours) {
+        try {
+            if (!hours || hours === null) {
+                // All-time fees
+                return positionData.feesEarned || 0;
+            }
+            
+            // Estimate based on daily fee rate
+            const dailyFeeRate = await this.calculateFeesEarned24h(positionData);
+            const hourlyRate = dailyFeeRate / 24;
+            return hourlyRate * hours;
+            
+        } catch (error) {
+            console.error(`Error calculating Orca fees for ${hours}h period:`, error);
+            return 0;
+        }
+    }
+    
+    async calculateImpermanentLossGainForPeriod(positionData, hours) {
+        try {
+            if (!positionData.token0 || !positionData.token1) {
+                return 0;
+            }
+            
+            // Get current token prices
+            const currentPrice0 = positionData.token0.price || 0;
+            const currentPrice1 = positionData.token1.price || 0;
+            
+            if (currentPrice0 === 0 || currentPrice1 === 0) {
+                return 0;
+            }
+            
+            // Get historical prices for the period
+            const historicalPrice0 = await this.getHistoricalPrice(positionData.token0.symbol, hours);
+            const historicalPrice1 = await this.getHistoricalPrice(positionData.token1.symbol, hours);
+            
+            if (historicalPrice0 === 0 || historicalPrice1 === 0) {
+                return 0;
+            }
+            
+            // Calculate price ratio changes
+            const currentRatio = currentPrice0 / currentPrice1;
+            const pastRatio = historicalPrice0 / historicalPrice1;
+            const ratioChange = currentRatio / pastRatio;
+            
+            // Calculate impermanent loss/gain
+            const currentIL = 2 * Math.sqrt(ratioChange) / (1 + ratioChange) - 1;
+            
+            // Convert to USD value
+            const positionValue = (positionData.token0.amount * currentPrice0) + (positionData.token1.amount * currentPrice1);
+            const impermanentLossGain = positionValue * currentIL;
+            
+            return impermanentLossGain;
+            
+        } catch (error) {
+            console.error(`Error calculating Orca IL for ${hours}h period:`, error);
+            return 0;
+        }
+    }
+    
+    async calculatePriceAppreciationForPeriod(positionData, totalValue, hours) {
+        try {
+            if (!positionData.token0 || !positionData.token1) {
+                return 0;
+            }
+            
+            // Get historical prices
+            const historicalPrice0 = await this.getHistoricalPrice(positionData.token0.symbol, hours);
+            const historicalPrice1 = await this.getHistoricalPrice(positionData.token1.symbol, hours);
+            
+            if (historicalPrice0 === 0 || historicalPrice1 === 0) {
+                return 0;
+            }
+            
+            // Calculate historical value
+            const historicalValue = (positionData.token0.amount * historicalPrice0) + (positionData.token1.amount * historicalPrice1);
+            
+            // Price appreciation = current value - historical value
+            const priceAppreciation = totalValue - historicalValue;
+            
+            return priceAppreciation;
+            
+        } catch (error) {
+            console.error(`Error calculating Orca price appreciation for ${hours}h period:`, error);
+            return 0;
+        }
+    }
+    
+    // Helper to get hours for a time period
+    getHoursForPeriod(timePeriod) {
+        const hoursMap = {
+            '1h': 1,
+            '24h': 24,
+            '7d': 168,
+            '30d': 720,
+            '1y': 8760,
+            'all': 8760 // Default to 1 year for all-time
+        };
+        return hoursMap[timePeriod] || 24;
     }
 }
 

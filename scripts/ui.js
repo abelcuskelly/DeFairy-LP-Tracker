@@ -477,6 +477,32 @@ class UIManager {
         const pool = this.currentPools.find(p => p.pool === poolName);
         if (!pool) return;
         
+        // Show breakdown for 24h by default
+        this.showPLBreakdown(poolName, '24h');
+    }
+    
+    // Show P&L breakdown modal for any time period
+    showPLBreakdown(poolName, timePeriod = '24h') {
+        const pool = this.currentPools.find(p => p.pool === poolName);
+        if (!pool) return;
+        
+        // Time period display names
+        const periodNames = {
+            '1h': '1 Hour',
+            '24h': '24 Hours',
+            '7d': '7 Days',
+            '30d': '30 Days'
+        };
+        
+        const periodName = periodNames[timePeriod] || '24 Hours';
+        const periodSuffix = timePeriod;
+        
+        // Get values for the selected time period
+        const feesEarned = pool[`feesEarned${periodSuffix}`] || 0;
+        const impermanentLossGain = pool[`impermanentLossGain${periodSuffix}`] || 0;
+        const priceAppreciation = pool[`priceAppreciation${periodSuffix}`] || 0;
+        const totalPL = pool[`pl${periodSuffix}`] || 0;
+        
         // Create modal HTML
         const modalHTML = `
             <div class="modal-overlay" id="pl24hModal" onclick="closePL24hModal()">
@@ -486,14 +512,20 @@ class UIManager {
                         <button class="close-btn" onclick="closePL24hModal()">×</button>
                     </div>
                     <div class="modal-body">
+                        <div class="time-period-tabs">
+                            <button class="tab-btn ${timePeriod === '1h' ? 'active' : ''}" onclick="switchPLPeriod('${poolName}', '1h')">1H</button>
+                            <button class="tab-btn ${timePeriod === '24h' ? 'active' : ''}" onclick="switchPLPeriod('${poolName}', '24h')">24H</button>
+                            <button class="tab-btn ${timePeriod === '7d' ? 'active' : ''}" onclick="switchPLPeriod('${poolName}', '7d')">7D</button>
+                            <button class="tab-btn ${timePeriod === '30d' ? 'active' : ''}" onclick="switchPLPeriod('${poolName}', '30d')">30D</button>
+                        </div>
                         <div class="pl24h-breakdown">
                             <div class="breakdown-item">
                                 <div class="breakdown-label">
                                     <i class="fas fa-coins"></i>
-                                    <span>Fees Earned (24h)</span>
+                                    <span>Fees Earned (${periodName})</span>
                                 </div>
                                 <div class="breakdown-value success">
-                                    ${this.formatCurrency(pool.feesEarned24h || 0)}
+                                    ${this.formatCurrency(feesEarned)}
                                 </div>
                                 <div class="breakdown-description">
                                     Trading fees collected from your liquidity provision
@@ -503,23 +535,23 @@ class UIManager {
                             <div class="breakdown-item">
                                 <div class="breakdown-label">
                                     <i class="fas fa-exchange-alt"></i>
-                                    <span>Impermanent Loss/Gain (24h)</span>
+                                    <span>Impermanent Loss/Gain (${periodName})</span>
                                 </div>
-                                <div class="breakdown-value ${(pool.impermanentLossGain24h || 0) >= 0 ? 'success' : 'error'}">
-                                    ${this.formatCurrency(pool.impermanentLossGain24h || 0)}
+                                <div class="breakdown-value ${(impermanentLossGain || 0) >= 0 ? 'success' : 'error'}">
+                                    ${this.formatCurrency(impermanentLossGain || 0)}
                                 </div>
                                 <div class="breakdown-description">
-                                    ${(pool.impermanentLossGain24h || 0) >= 0 ? 'Gain' : 'Loss'} from token price ratio changes
+                                    ${(impermanentLossGain || 0) >= 0 ? 'Gain' : 'Loss'} from token price ratio changes
                                 </div>
                             </div>
                             
                             <div class="breakdown-item">
                                 <div class="breakdown-label">
                                     <i class="fas fa-trending-up"></i>
-                                    <span>Price Appreciation (24h)</span>
+                                    <span>Price Appreciation (${periodName})</span>
                                 </div>
-                                <div class="breakdown-value ${(pool.priceAppreciation24h || 0) >= 0 ? 'success' : 'error'}">
-                                    ${this.formatCurrency(pool.priceAppreciation24h || 0)}
+                                <div class="breakdown-value ${(priceAppreciation || 0) >= 0 ? 'success' : 'error'}">
+                                    ${this.formatCurrency(priceAppreciation || 0)}
                                 </div>
                                 <div class="breakdown-description">
                                     Value change from underlying token price movements
@@ -531,10 +563,10 @@ class UIManager {
                             <div class="breakdown-item total">
                                 <div class="breakdown-label">
                                     <i class="fas fa-calculator"></i>
-                                    <span><strong>Total P&L (24h)</strong></span>
+                                    <span><strong>Total P&L (${periodName})</strong></span>
                                 </div>
-                                <div class="breakdown-value ${pool.pl24h >= 0 ? 'success' : 'error'}">
-                                    <strong>${this.formatCurrency(pool.pl24h, 2)}</strong>
+                                <div class="breakdown-value ${totalPL >= 0 ? 'success' : 'error'}">
+                                    <strong>${this.formatCurrency(totalPL, 2)}</strong>
                                 </div>
                                 <div class="breakdown-description">
                                     <strong>Comprehensive profit/loss calculation</strong>
@@ -603,6 +635,16 @@ function closePL24hModal() {
             modal.remove();
         }, 300);
     }
+}
+
+// Global function to switch P&L time period
+function switchPLPeriod(poolName, timePeriod) {
+    // Close current modal
+    closePL24hModal();
+    // Open new modal with selected time period
+    setTimeout(() => {
+        uiManager.showPLBreakdown(poolName, timePeriod);
+    }, 350);
 }
 
 // Handle Enter key in AI input
