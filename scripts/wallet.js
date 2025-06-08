@@ -12,8 +12,11 @@ class WalletManager {
                 this.connectedWallet = 'phantom';
                 this.publicKey = response.publicKey.toString();
                 
-                document.getElementById('walletAddress').value = this.publicKey;
+                document.getElementById('walletInput').value = this.publicKey;
                 showNotification('Wallet connected successfully!', 'success');
+                
+                // Automatically load portfolio with DEX data
+                await loadPortfolio();
                 
                 return {
                     success: true,
@@ -39,7 +42,13 @@ class WalletManager {
             
             this.connectedWallet = null;
             this.publicKey = null;
-            document.getElementById('walletAddress').value = '';
+            document.getElementById('walletInput').value = '';
+            
+            // Stop real-time monitoring if active
+            if (window.activeOrcaMonitor) {
+                window.activeOrcaMonitor.close();
+                window.activeOrcaMonitor = null;
+            }
             
             showNotification('Wallet disconnected', 'info');
         } catch (error) {
@@ -48,7 +57,7 @@ class WalletManager {
     }
 
     getWalletAddress() {
-        return document.getElementById('walletAddress').value || this.publicKey;
+        return document.getElementById('walletInput').value || this.publicKey;
     }
 
     isConnected() {

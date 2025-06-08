@@ -127,6 +127,31 @@ class DeFairyApp {
                 autoRebalancer.updatePositions(positions);
             }
             
+            // NEW: Automatically load complete DEX portfolio including Orca and Raydium
+            try {
+                const completePortfolio = await defairyIntegration.getCompletePortfolio(this.activeWallet);
+                console.log('Complete DEX Portfolio loaded:', completePortfolio);
+                
+                // Update UI with enhanced data
+                defairyIntegration.updateDeFairyUI(completePortfolio);
+                
+                // Start real-time monitoring for the wallet
+                if (window.activeOrcaMonitor) {
+                    window.activeOrcaMonitor.close();
+                }
+                
+                window.activeOrcaMonitor = defairyIntegration.startRealTimeMonitoring(this.activeWallet, (transaction) => {
+                    console.log('🌊 New DEX transaction:', transaction);
+                    // Update UI with new transaction if pool monitor UI is visible
+                    if (document.querySelector('.pool-monitoring-section')) {
+                        poolMonitorUI.displayRealtimeTransaction(transaction.data);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading complete DEX portfolio:', error);
+                // Continue with basic portfolio even if DEX integration fails
+            }
+            
             if (showLoadingUI) {
                 showNotification('Portfolio loaded successfully! ✨', 'success');
             }
