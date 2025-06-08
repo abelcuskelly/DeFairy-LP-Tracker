@@ -346,6 +346,25 @@ class SolanaPoolMonitor {
                         }
                     ]
                 }));
+                
+                // NEW: Subscribe to transaction updates using Geyser-enhanced endpoint
+                ws.send(JSON.stringify({
+                    jsonrpc: '2.0',
+                    id: 3,
+                    method: 'transactionSubscribe',
+                    params: [
+                        {
+                            accountInclude: [this.PROGRAM_IDS.ORCA.WHIRLPOOL],
+                            accountRequired: [walletAddress]
+                        },
+                        {
+                            commitment: 'confirmed',
+                            encoding: 'jsonParsed',
+                            transactionDetails: 'full',
+                            maxSupportedTransactionVersion: 0
+                        }
+                    ]
+                }));
             };
             
             ws.onmessage = async (event) => {
@@ -366,6 +385,16 @@ class SolanaPoolMonitor {
                         type: 'new_transaction',
                         data: parsedTransaction
                     });
+                } else if (data.method === 'transactionNotification') {
+                    // NEW: Handle Geyser transaction notifications
+                    const transaction = data.params.result;
+                    const parsed = await this.parseOrcaRealTimeTransaction(transaction);
+                    if (parsed) {
+                        callback({
+                            type: 'new_transaction',
+                            data: parsed
+                        });
+                    }
                 }
             };
             
@@ -400,6 +429,160 @@ class SolanaPoolMonitor {
         } catch (error) {
             console.error('Error parsing real-time transaction:', error);
             return logs;
+        }
+    }
+
+    // NEW: Parse Orca real-time transaction from Geyser
+    async parseOrcaRealTimeTransaction(transaction) {
+        try {
+            const { signature, blockTime } = transaction;
+            
+            // Extract operation type
+            const operation = this.identifyOrcaOperation(transaction);
+            
+            // Extract token balance changes
+            const tokenChanges = this.extractTokenChanges(transaction.meta);
+            
+            // Calculate liquidity metrics
+            const liquidityMetrics = this.calculateLiquidityMetrics(tokenChanges, operation);
+            
+            return {
+                signature,
+                timestamp: blockTime ? new Date(blockTime * 1000) : new Date(),
+                operation,
+                pool: this.extractPoolAddress(transaction),
+                tokenA: liquidityMetrics.tokenA,
+                tokenB: liquidityMetrics.tokenB,
+                amountA: liquidityMetrics.amountA,
+                amountB: liquidityMetrics.amountB,
+                lpTokenChange: liquidityMetrics.lpTokenChange,
+                fees: transaction.meta?.fee || 0,
+                success: !transaction.meta?.err,
+                source: 'ORCA',
+                description: `Orca ${operation} operation`
+            };
+        } catch (error) {
+            console.error('Error parsing Orca real-time transaction:', error);
+            return null;
+        }
+    }
+    
+    // NEW: Identify specific Orca operations from transaction
+    identifyOrcaOperation(transaction) {
+        const instructions = transaction.transaction?.message?.instructions || [];
+        
+        for (const instruction of instructions) {
+            const programId = instruction.programId?.toString?.() || instruction.programId;
+            
+            if (programId === this.PROGRAM_IDS.ORCA.WHIRLPOOL) {
+                // Decode based on instruction data or account count
+                const accounts = instruction.accounts?.length || 0;
+                const data = instruction.data;
+                
+                // Check instruction data for operation type
+                if (data?.includes?.('swap')) return 'swap';
+                if (data?.includes?.('increaseLiquidity')) return 'increaseLiquidity';
+                if (data?.includes?.('decreaseLiquidity')) return 'decreaseLiquidity';
+                if (data?.includes?.('initializePosition')) return 'initializePosition';
+                if (data?.includes?.('collectFees')) return 'collectFees';
+                
+                // Fallback to account count heuristic
+                if (accounts >= 15) return 'swap';
+                if (accounts >= 10) return 'increaseLiquidity';
+                if (accounts >= 8) return 'decreaseLiquidity';
+            }
+        }
+        
+        return 'unknown';
+    }
+    
+    // NEW: Extract token balance changes from transaction meta
+    extractTokenChanges(meta) {
+        if (!meta?.preTokenBalances || !meta?.postTokenBalances) return [];
+        
+        const changes = [];
+        const preBalances = new Map();
+        
+        // Map pre-balances
+        meta.preTokenBalances.forEach(balance => {
+            const key = `${balance.accountIndex}-${balance.mint}`;
+            preBalances.set(key, balance.uiTokenAmount?.uiAmount || 0);
+        });
+        
+        // Calculate changes
+        meta.postTokenBalances.forEach(balance => {
+            const key = `${balance.accountIndex}-${balance.mint}`;
+            const preAmount = preBalances.get(key) || 0;
+            const postAmount = balance.uiTokenAmount?.uiAmount || 0;
+            const change = postAmount - preAmount;
+            
+            if (Math.abs(change) > 0.000001) {
+                changes.push({
+                    mint: balance.mint,
+                    change,
+                    owner: balance.owner,
+                    symbol: balance.uiTokenAmount?.symbol || 'Unknown'
+                });
+            }
+        });
+        
+        return changes;
+    }
+    
+    // NEW: Calculate liquidity metrics from token changes
+    calculateLiquidityMetrics(tokenChanges, operation) {
+        const metrics = {
+            tokenA: null,
+            tokenB: null,
+            amountA: 0,
+            amountB: 0,
+            lpTokenChange: 0
+        };
+        
+        if (tokenChanges.length >= 2) {
+            // Sort by absolute change amount to identify main tokens
+            const sorted = tokenChanges.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+            
+            const [changeA, changeB] = sorted;
+            metrics.tokenA = changeA.mint;
+            metrics.tokenB = changeB.mint;
+            metrics.amountA = Math.abs(changeA.change);
+            metrics.amountB = Math.abs(changeB.change);
+            
+            // Look for LP token change
+            const lpToken = tokenChanges.find(change => 
+                change.mint !== metrics.tokenA && 
+                change.mint !== metrics.tokenB
+            );
+            
+            if (lpToken) {
+                metrics.lpTokenChange = lpToken.change;
+            }
+        }
+        
+        return metrics;
+    }
+    
+    // NEW: Extract pool address from transaction
+    extractPoolAddress(transaction) {
+        try {
+            const accounts = transaction.transaction?.message?.accountKeys || [];
+            
+            // Look for whirlpool account (usually in first few positions)
+            for (let i = 0; i < Math.min(5, accounts.length); i++) {
+                const account = accounts[i];
+                const address = account?.pubkey?.toString?.() || account;
+                
+                // Simple heuristic - pool addresses are usually base58 strings
+                if (address && typeof address === 'string' && address.length > 30) {
+                    return address;
+                }
+            }
+            
+            return 'unknown';
+        } catch (error) {
+            console.error('Error extracting pool address:', error);
+            return 'unknown';
         }
     }
 
@@ -440,11 +623,95 @@ class SolanaPoolMonitor {
                 }
             }
             
+            // NEW: Calculate current positions from transaction history
+            const allTransactions = await this.getOrcaTransactions(walletAddress, { limit: 200 });
+            const liquidityOps = allTransactions.filter(tx => 
+                ['increaseLiquidity', 'decreaseLiquidity', 'initializePosition', 
+                 'INCREASE_LIQUIDITY', 'DECREASE_LIQUIDITY', 'ADD_LIQUIDITY', 'REMOVE_LIQUIDITY'].includes(tx.type || tx.operation)
+            );
+            
+            const calculatedPositions = this.calculateCurrentPositions(liquidityOps);
+            
+            // Merge calculated positions with fetched positions
+            calculatedPositions.forEach(calcPos => {
+                const exists = positions.find(p => 
+                    p.pool === calcPos.pool || 
+                    (p.token0?.symbol === calcPos.tokenA && p.token1?.symbol === calcPos.tokenB)
+                );
+                
+                if (!exists) {
+                    positions.push({
+                        ...calcPos,
+                        protocol: 'Orca',
+                        inRange: true // Would need to check actual range
+                    });
+                }
+            });
+            
             return positions;
         } catch (error) {
             console.error('Error fetching liquidity positions:', error);
             throw error;
         }
+    }
+    
+    // NEW: Calculate current positions from transaction history
+    calculateCurrentPositions(liquidityTransactions) {
+        const positions = {};
+        
+        liquidityTransactions.forEach(tx => {
+            // Extract token info
+            let tokenA, tokenB, amountA = 0, amountB = 0;
+            
+            if (tx.details?.tokens) {
+                const tokens = Object.entries(tx.details.tokens);
+                if (tokens.length >= 2) {
+                    tokenA = tokens[0][1].symbol;
+                    tokenB = tokens[1][1].symbol;
+                    amountA = Math.abs(tokens[0][1].change || 0);
+                    amountB = Math.abs(tokens[1][1].change || 0);
+                }
+            } else if (tx.tokenA && tx.tokenB) {
+                tokenA = tx.tokenA;
+                tokenB = tx.tokenB;
+                amountA = tx.amountA || 0;
+                amountB = tx.amountB || 0;
+            }
+            
+            if (!tokenA || !tokenB) return;
+            
+            const key = `${tokenA}-${tokenB}`;
+            
+            if (!positions[key]) {
+                positions[key] = {
+                    pool: tx.pool?.address || key,
+                    tokenA,
+                    tokenB,
+                    totalLiquidityAdded: 0,
+                    totalLiquidityRemoved: 0,
+                    netPosition: 0,
+                    transactions: []
+                };
+            }
+            
+            positions[key].transactions.push(tx);
+            
+            const isAdd = ['ADD_LIQUIDITY', 'INCREASE_LIQUIDITY', 'addLiquidity', 'increaseLiquidity', 'initializePosition']
+                .includes(tx.type || tx.operation);
+            const isRemove = ['REMOVE_LIQUIDITY', 'DECREASE_LIQUIDITY', 'removeLiquidity', 'decreaseLiquidity']
+                .includes(tx.type || tx.operation);
+            
+            if (isAdd) {
+                positions[key].totalLiquidityAdded += amountA + amountB;
+            } else if (isRemove) {
+                positions[key].totalLiquidityRemoved += amountA + amountB;
+            }
+            
+            positions[key].netPosition = positions[key].totalLiquidityAdded - positions[key].totalLiquidityRemoved;
+        });
+        
+        // Filter out closed positions
+        return Object.values(positions).filter(pos => pos.netPosition > 0.001);
     }
 
     // Identify LP token and its protocol

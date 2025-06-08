@@ -604,6 +604,7 @@
     <script src="scripts/orca.js"></script>
     <script src="scripts/poolMonitor.js"></script>
     <script src="scripts/poolMonitorUI.js"></script>
+    <script src="scripts/defairyIntegration.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/openai.js"></script>
     <script src="scripts/autoRebalancing.js"></script>
@@ -615,6 +616,10 @@
         <button class="btn btn-secondary" onclick="toggleAutoRebalancing()" id="rebalanceToggleBtn">
             <i class="fas fa-sync-alt"></i>
             Enable Auto-Rebalancing
+        </button>
+        <button class="btn btn-primary" onclick="integrateOrcaWithDeFairy()" style="margin-left: 10px;">
+            <i class="fas fa-water"></i>
+            Load Orca Portfolio
         </button>
     </div>
 </body>
