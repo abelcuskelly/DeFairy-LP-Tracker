@@ -68,6 +68,71 @@ A comprehensive portfolio tracker for Solana liquidity pools with pool-specific 
 - Cross-DEX transaction aggregation
 - Alternative data source for reliability
 
+## 📊 Comprehensive P&L Calculation System
+
+### 🧮 Enhanced P&L Formula
+
+DeFairy uses a comprehensive, transparent P&L calculation that provides complete visibility into your liquidity provision performance:
+
+```
+P&L = Fees Earned + Impermanent Loss/Gain + Price Appreciation
+```
+
+### 📈 Multi-Period Analysis
+
+The same comprehensive formula is applied consistently across all time periods:
+
+- **1 Hour (1h)**: Real-time short-term performance
+- **24 Hours (24h)**: Daily performance tracking
+- **7 Days (7d)**: Weekly trend analysis  
+- **30 Days (30d)**: Monthly performance overview
+
+### 🔍 Component Breakdown
+
+#### 1. **Fees Earned**
+- Trading fees collected from your liquidity provision
+- Calculated based on your share of pool trading volume
+- Represents the primary income from LP positions
+
+#### 2. **Impermanent Loss/Gain**
+- Calculated using the standard IL formula: `2 * sqrt(ratio) / (1 + ratio) - 1`
+- Measures gain/loss from token price ratio changes
+- Positive values indicate impermanent gain, negative indicate loss
+
+#### 3. **Price Appreciation**
+- Value change from underlying token price movements
+- Calculated as: `Current Position Value - Historical Position Value`
+- Reflects the USD value change of your token holdings
+
+### 🎯 Interactive P&L Breakdown
+
+- **Info Icons**: Click the ℹ️ icon next to any P&L value for detailed breakdown
+- **Time Period Tabs**: Switch between 1h, 24h, 7d, and 30d views in the modal
+- **Color Coding**: Green for gains, red for losses
+- **Real-time Updates**: All calculations update automatically with new data
+
+### 🔧 Technical Implementation
+
+- **Consistent Methodology**: Same calculation logic across all DEXes (Orca, Raydium, Meteora)
+- **Historical Price Data**: Fetches historical prices for accurate period calculations
+- **Fallback Systems**: Multiple data sources ensure calculation reliability
+- **Performance Optimized**: Efficient caching and batch processing
+
+### 📋 Example Breakdown
+
+```
+SOL/USDC Pool (24h):
+├── Fees Earned: +$18.76
+├── Impermanent Loss: -$2.31
+├── Price Appreciation: +$107.00
+└── Total P&L: +$123.45
+```
+
+This transparent approach gives you complete insight into:
+- How much you're earning from fees
+- Whether price movements are helping or hurting your position
+- The net effect of all factors on your LP performance
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -197,7 +262,7 @@ Default API keys are included for demo purposes. For production:
 3. Verify your sender email
 4. Configure in notification settings
 
-## 📁 Project Structure
+## �� Project Structure
 
 ```
 defairy/
