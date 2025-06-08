@@ -155,4 +155,414 @@
     .pl24h-formula {
         padding: 12px;
     }
+}
+
+/* Smart Auto-Rebalancing Styles */
+.smart-rebalance-alerts-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.smart-rebalance-alert {
+    background: rgba(0, 0, 0, 0.95);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    margin-bottom: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    animation: slideInRight 0.3s ease-out;
+    overflow: hidden;
+}
+
+.smart-rebalance-alert.high-urgency {
+    border-left-color: #F44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.smart-rebalance-alert.medium-urgency {
+    border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.1);
+}
+
+.smart-rebalance-alert.low-urgency {
+    border-left-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.alert-header {
+    padding: 15px 20px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.alert-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.alert-title i {
+    color: var(--primary-color);
+    font-size: 1.2em;
+}
+
+.alert-title span:first-of-type {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1.1em;
+}
+
+.urgency-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.urgency-badge.high {
+    background: #F44336;
+    color: white;
+}
+
+.urgency-badge.medium {
+    background: #FF9800;
+    color: white;
+}
+
+.urgency-badge.low {
+    background: #4CAF50;
+    color: white;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.alert-body {
+    padding: 15px 20px;
+}
+
+.rebalance-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-item .label {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.summary-item .value {
+    color: var(--text-color);
+    font-weight: 500;
+    text-align: right;
+}
+
+.alert-actions {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.alert-actions .btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.alert-actions .btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.alert-actions .btn-primary:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.alert-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.alert-actions .btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 0.8em;
+    padding: 6px 10px;
+}
+
+.alert-actions .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+/* Transaction Preview Modal */
+.transaction-preview-modal,
+.rebalance-confirmation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.transaction-preview-modal .modal-overlay,
+.rebalance-confirmation-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.transaction-preview-modal .modal-content,
+.rebalance-confirmation-modal .modal-content {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.transaction-preview-modal .modal-header,
+.rebalance-confirmation-modal .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), #45a049);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.transaction-preview-modal .modal-header h3,
+.rebalance-confirmation-modal .modal-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.transaction-preview-modal .modal-body,
+.rebalance-confirmation-modal .modal-body {
+    padding: 20px;
+}
+
+.transaction-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.detail-row .value {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.transaction-steps {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.transaction-steps h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+    font-size: 1em;
+}
+
+.transaction-steps ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+}
+
+.transaction-steps li {
+    margin-bottom: 5px;
+}
+
+.confirmation-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.confirmation-warning p {
+    margin: 5px 0;
+    color: var(--text-color);
+    font-size: 0.9em;
+}
+
+.confirmation-details {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.confirmation-details p {
+    margin: 8px 0;
+    color: var(--text-color);
+}
+
+.transaction-preview-modal .modal-footer,
+.rebalance-confirmation-modal .modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.transaction-preview-modal .modal-footer .btn,
+.rebalance-confirmation-modal .modal-footer .btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.transaction-preview-modal .modal-footer .btn-primary,
+.rebalance-confirmation-modal .modal-footer .btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.transaction-preview-modal .modal-footer .btn-primary:hover,
+.rebalance-confirmation-modal .modal-footer .btn-primary:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.transaction-preview-modal .modal-footer .btn-secondary,
+.rebalance-confirmation-modal .modal-footer .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.transaction-preview-modal .modal-footer .btn-secondary:hover,
+.rebalance-confirmation-modal .modal-footer .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments for smart rebalancing */
+@media (max-width: 768px) {
+    .smart-rebalance-alerts-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .alert-actions {
+        flex-direction: column;
+    }
+    
+    .alert-actions .btn {
+        min-width: auto;
+    }
+    
+    .transaction-preview-modal .modal-content,
+    .rebalance-confirmation-modal .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .transaction-preview-modal .modal-footer,
+    .rebalance-confirmation-modal .modal-footer {
+        flex-direction: column;
+    }
 } 
