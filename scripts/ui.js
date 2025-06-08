@@ -102,6 +102,7 @@ class UIManager {
             
             const poolElement = document.createElement('div');
             poolElement.className = 'pool-row fade-in';
+            poolElement.setAttribute('data-pool-address', pool.address || `pool-${index}`);
             poolElement.innerHTML = `
                 <table>
                     <tr>
@@ -122,11 +123,19 @@ class UIManager {
                                ${location}
                             </a>
                         </td>
+                        <td class="rebalance-cell">
+                            <!-- Will be populated by updatePoolRebalancingUI() -->
+                        </td>
                     </tr>
                 </table>
             `;
             container.appendChild(poolElement);
         });
+        
+        // Update rebalancing toggles after rendering
+        if (window.updatePoolRebalancingUI) {
+            window.updatePoolRebalancingUI();
+        }
     }
 
     // Sort pools by column
@@ -495,4 +504,99 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-}); 
+});
+
+// Configure notification settings
+function configureNotifications() {
+    const currentSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+    
+    const modal = document.createElement('div');
+    modal.className = 'notification-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Notification Settings</h2>
+                <button onclick="this.closest('.notification-modal').remove()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="notification-option">
+                    <label>
+                        <input type="checkbox" id="telegramEnabled" ${currentSettings.telegram?.enabled ? 'checked' : ''}>
+                        Enable Telegram Notifications
+                    </label>
+                    <input type="text" id="telegramChatId" placeholder="Enter Telegram Chat ID" 
+                           value="${currentSettings.telegram?.chatId || ''}" 
+                           style="display: ${currentSettings.telegram?.enabled ? 'block' : 'none'}">
+                </div>
+                <div class="notification-option">
+                    <label>
+                        <input type="checkbox" id="emailEnabled" ${currentSettings.email?.enabled ? 'checked' : ''}>
+                        Enable Email Notifications
+                    </label>
+                    <input type="email" id="emailAddress" placeholder="Enter email address" 
+                           value="${currentSettings.email?.address || ''}"
+                           style="display: ${currentSettings.email?.enabled ? 'block' : 'none'}">
+                </div>
+                <div class="notification-option">
+                    <label>
+                        <input type="checkbox" id="inAppEnabled" ${currentSettings.inApp?.enabled !== false ? 'checked' : ''}>
+                        Enable In-App Notifications
+                    </label>
+                </div>
+                <div class="threshold-settings">
+                    <h3>Alert Thresholds</h3>
+                    <div class="threshold-option">
+                        <label>Imbalance Ratio Alert (%):</label>
+                        <input type="number" id="imbalanceThreshold" min="10" max="50" value="25">
+                    </div>
+                    <div class="threshold-option">
+                        <label>Price Deviation Alert (%):</label>
+                        <input type="number" id="priceThreshold" min="1" max="20" value="5">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveNotificationSettings()">Save Settings</button>
+                <button class="btn btn-secondary" onclick="this.closest('.notification-modal').remove()">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Toggle input visibility
+    document.getElementById('telegramEnabled').addEventListener('change', (e) => {
+        document.getElementById('telegramChatId').style.display = e.target.checked ? 'block' : 'none';
+    });
+    
+    document.getElementById('emailEnabled').addEventListener('change', (e) => {
+        document.getElementById('emailAddress').style.display = e.target.checked ? 'block' : 'none';
+    });
+}
+
+// Save notification settings
+function saveNotificationSettings() {
+    const settings = {
+        telegram: {
+            enabled: document.getElementById('telegramEnabled').checked,
+            chatId: document.getElementById('telegramChatId').value
+        },
+        email: {
+            enabled: document.getElementById('emailEnabled').checked,
+            address: document.getElementById('emailAddress').value
+        },
+        inApp: {
+            enabled: document.getElementById('inAppEnabled').checked
+        }
+    };
+    
+    localStorage.setItem('notificationSettings', JSON.stringify(settings));
+    
+    // Update global notification settings
+    if (window.notificationSettings) {
+        window.notificationSettings = settings;
+    }
+    
+    showNotification('Notification settings saved!', 'success');
+    document.querySelector('.notification-modal').remove();
+} 

@@ -122,6 +122,12 @@ class DeFairyApp {
             uiManager.updatePortfolioStats(metrics);
             uiManager.renderPools(metrics.pools);
             
+            // Store pools globally for rebalancing system
+            window.portfolioPools = metrics.pools;
+            
+            // Emit poolsLoaded event for rebalancing system
+            window.dispatchEvent(new CustomEvent('poolsLoaded', { detail: metrics.pools }));
+            
             // Update auto-rebalancer if enabled
             if (this.autoRebalancingEnabled) {
                 autoRebalancer.updatePositions(positions);

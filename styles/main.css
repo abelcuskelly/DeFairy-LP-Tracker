@@ -569,30 +569,279 @@ body {
     background: rgba(255, 107, 107, 0.2);
 }
 
-/* Auto-rebalancing toggle */
-.auto-rebalance-toggle {
-    position: fixed;
-    bottom: 2rem;
-    left: 2rem;
-    z-index: 1000;
+/* Pool Rebalancing Styles */
+.rebalance-cell {
+    text-align: center;
+    padding: 0.5rem;
 }
 
-.auto-rebalance-toggle .btn {
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
+.rebalance-toggle {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.rebalance-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.rebalance-toggle input:checked + .toggle-slider {
+    background-color: #32cd32;
+}
+
+.rebalance-toggle input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Rebalancing Notifications */
+.rebalancing-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: linear-gradient(135deg, #ff6b6b, #ff8c00);
     color: white;
-    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+    border-radius: 10px 10px 0 0;
+    font-weight: bold;
+}
+
+.notification-header button {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-body {
+    padding: 15px;
+    color: #333;
+}
+
+.alert-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border-left: 4px solid;
+}
+
+.alert-item.critical {
+    background-color: #ffebee;
+    border-color: #f44336;
+}
+
+.alert-item.high {
+    background-color: #fff3e0;
+    border-color: #ff9800;
+}
+
+.alert-item.medium {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.recommendation {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Select All Pools Button */
+.rebalance-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.select-all-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-settings {
+    display: flex;
+    gap: 10px;
+}
+
+.notification-settings button {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.auto-rebalance-toggle .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+.notification-settings button:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
-.auto-rebalance-toggle .btn.active {
-    background: linear-gradient(135deg, #32cd32, #228b22);
+/* Notification Modal */
+.notification-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
 }
 
-.auto-rebalance-toggle .btn i {
-    margin-right: 8px;
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.modal-header button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.notification-option {
+    margin-bottom: 20px;
+}
+
+.notification-option label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.notification-option input[type="text"],
+.notification-option input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.threshold-settings {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.threshold-settings h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.threshold-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.threshold-option label {
+    color: #666;
+}
+
+.threshold-option input[type="number"] {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #eee;
+}
+
+.modal-footer .btn {
+    padding: 10px 20px;
 } 

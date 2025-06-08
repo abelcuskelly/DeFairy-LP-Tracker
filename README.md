@@ -1,6 +1,6 @@
 # DeFairy - Magical Solana LP Portfolio Tracker 🧚‍♀️
 
-A comprehensive portfolio tracker for Solana liquidity pools with automatic DEX integration, real-time monitoring, and AI-powered assistance.
+A comprehensive portfolio tracker for Solana liquidity pools with pool-specific alert system, real-time monitoring, and AI-powered assistance.
 
 ![DeFairy](https://img.shields.io/badge/DeFairy-Solana%20LP%20Tracker-4a90e2?style=for-the-badge&logo=solana)
 
@@ -12,11 +12,24 @@ A comprehensive portfolio tracker for Solana liquidity pools with automatic DEX 
 - **Position Monitoring**: Track in-range/out-of-range status for all positions
 - **Historical Analysis**: View performance over 24h, week, month, and all-time
 
-### 🔄 Auto-Rebalancing System
-- **Smart Position Monitoring**: Automatically detects when positions go out of range
-- **Optimization Recommendations**: AI-powered suggestions for optimal tick ranges
-- **One-Click Rebalancing**: Execute rebalancing directly from the interface
-- **Webhook Integration**: Real-time notifications via Helius webhooks
+### 🚨 Pool-Specific Alert System
+- **Individual Pool Monitoring**: Enable alerts for specific pools or all pools at once
+- **Smart Threshold Detection**: 
+  - 25/75 token imbalance alerts
+  - Out-of-range position notifications
+  - Price deviation warnings (5% default)
+- **Multi-Channel Notifications**:
+  - In-app pop-up alerts
+  - Telegram bot integration (configurable)
+  - Email notifications (configurable)
+- **Customizable Settings**: Adjust alert thresholds per your risk tolerance
+
+### 🔔 Advanced Notification System
+- **Real-time Alerts**: Instant notifications when rebalancing is needed
+- **Notification Settings Modal**: Configure Telegram chat ID and email preferences
+- **Alert Severity Levels**: Critical, high, and medium priority alerts
+- **Auto-Dismiss**: Notifications auto-remove after 30 seconds
+- **Direct Action**: Click to open pool on respective DEX for manual rebalancing
 
 ### 🌊 Advanced Pool Monitoring
 - **5 Monitoring Methods**:
@@ -66,7 +79,7 @@ A comprehensive portfolio tracker for Solana liquidity pools with automatic DEX 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/defairy.git
+git clone https://github.com/Defairy/DeFairy-WebApp.git
 cd defairy
 
 # Install dependencies
@@ -93,6 +106,16 @@ vercel deploy --prod
 2. **Connect Wallet**: Click "Connect Phantom" for wallet integration
 3. **Automatic Loading**: Portfolio data loads automatically from all DEXes
 
+### Pool-Specific Alert Configuration
+
+1. **Enable Pool Alerts**: Toggle the switch in the "Alerts" column for each pool
+2. **Select All Pools**: Use the master toggle to enable alerts for all pools at once
+3. **Configure Notifications**: Click "Notification Settings" to set up:
+   - Telegram bot notifications (requires chat ID)
+   - Email alerts (requires email address)
+   - In-app notifications (enabled by default)
+4. **Customize Thresholds**: Set imbalance ratio and price deviation alerts
+
 ### Pool Activity Monitor
 
 Access advanced monitoring features:
@@ -104,13 +127,6 @@ Access advanced monitoring features:
    - **Real-time**: Live WebSocket updates
 3. Choose DEX (Orca, Raydium, Meteora)
 4. Click "Start Monitoring"
-
-### Auto-Rebalancing
-
-1. Click "Enable Auto-Rebalancing" button
-2. System monitors positions for optimization opportunities
-3. Receive notifications when rebalancing is recommended
-4. Execute rebalancing with one click
 
 ### AI Assistant
 
@@ -135,6 +151,8 @@ Access advanced monitoring features:
 - **API Routes**:
   - `/api/openai`: AI assistant endpoint
   - `/api/webhook`: Helius webhook handler
+  - `/api/notifications/telegram`: Telegram bot integration
+  - `/api/notifications/email`: Email notification service
 
 ### Data Sources
 1. **Helius API**: Primary data provider
@@ -152,6 +170,8 @@ Create a `.env` file or set in Vercel:
 OPENAI_API_KEY=your_openai_api_key
 HELIUS_API_KEY=your_helius_api_key
 BITQUERY_API_KEY=your_bitquery_api_key (optional)
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token (optional)
+SENDGRID_API_KEY=your_sendgrid_api_key (optional)
 ```
 
 ### API Keys
@@ -159,7 +179,23 @@ BITQUERY_API_KEY=your_bitquery_api_key (optional)
 Default API keys are included for demo purposes. For production:
 1. Get your own [Helius API key](https://helius.xyz)
 2. Get your own [OpenAI API key](https://openai.com)
-3. Update in Vercel dashboard or `.env` file
+3. Set up [Telegram Bot](https://core.telegram.org/bots#botfather) for notifications
+4. Configure [SendGrid](https://sendgrid.com) for email alerts
+5. Update in Vercel dashboard or `.env` file
+
+### Notification Setup
+
+#### Telegram Notifications
+1. Create a bot via [@BotFather](https://t.me/botfather)
+2. Get your bot token
+3. Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
+4. Configure in notification settings
+
+#### Email Notifications
+1. Sign up for [SendGrid](https://sendgrid.com)
+2. Create an API key
+3. Verify your sender email
+4. Configure in notification settings
 
 ## 📁 Project Structure
 
@@ -167,7 +203,7 @@ Default API keys are included for demo purposes. For production:
 defairy/
 ├── index.html              # Main application
 ├── styles/
-│   └── main.css           # Styling
+│   └── main.css           # Styling with notification UI
 ├── scripts/
 │   ├── main.js            # App initialization
 │   ├── wallet.js          # Wallet connection
@@ -177,17 +213,25 @@ defairy/
 │   ├── poolMonitor.js     # Pool monitoring system
 │   ├── poolMonitorUI.js   # Monitoring UI
 │   ├── defairyIntegration.js # DEX integration
-│   ├── ui.js              # UI management
+│   ├── ui.js              # UI management with notification modal
 │   ├── openai.js          # AI assistant
-│   └── autoRebalancing.js # Auto-rebalancing logic
+│   └── autoRebalancing.js # Pool-specific alert system
 ├── api/
 │   ├── openai.js          # OpenAI serverless function
-│   └── webhook.js         # Webhook handler
+│   ├── webhook.js         # Webhook handler
+│   └── notifications.js   # Notification endpoints
 ├── vercel.json            # Vercel configuration
 └── package.json           # Dependencies
 ```
 
 ## 🌈 Features in Detail
+
+### Pool-Specific Alert System
+- **Individual Control**: Enable/disable alerts per pool
+- **Smart Detection**: Monitors token imbalance, out-of-range positions, price deviations
+- **Configurable Thresholds**: Customize when alerts trigger
+- **Multiple Notification Channels**: In-app, Telegram, email
+- **Persistent Settings**: Configuration saved in localStorage
 
 ### Automatic DEX Integration
 - No manual steps required
@@ -214,6 +258,16 @@ defairy/
 - Price update alerts
 - Transaction monitoring
 
+## ⚠️ Important Notes
+
+### Auto-Rebalancing Limitations
+Due to Solana's security model:
+- **Manual Approval Required**: Each transaction needs wallet signature
+- **No Pre-Authorization**: Cannot execute transactions automatically
+- **Alert-Based System**: Provides notifications for manual action
+
+The alert system is designed to notify users when rebalancing is optimal, but execution requires manual wallet approval for security.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -227,6 +281,8 @@ This project is licensed under the MIT License.
 - [Helius](https://helius.xyz) for enhanced Solana APIs
 - [Orca](https://orca.so) for liquidity pool infrastructure
 - [OpenAI](https://openai.com) for GPT-4o integration
+- [Telegram](https://telegram.org) for bot API
+- [SendGrid](https://sendgrid.com) for email services
 - Solana community for the amazing ecosystem
 
 ---

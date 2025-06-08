@@ -546,6 +546,22 @@
                 Your Pools
             </div>
             
+            <!-- Rebalancing Controls -->
+            <div class="rebalance-controls">
+                <div class="select-all-toggle">
+                    <label class="rebalance-toggle">
+                        <input type="checkbox" onchange="toggleAllPoolsRebalancing(this.checked)" id="selectAllRebalancing">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span>Enable alerts for all pools</span>
+                </div>
+                <div class="notification-settings">
+                    <button onclick="configureNotifications()">
+                        <i class="fas fa-bell"></i> Notification Settings
+                    </button>
+                </div>
+            </div>
+            
             <div class="pool-table-container">
                 <table class="pool-table">
                     <thead>
@@ -557,6 +573,7 @@
                             <th onclick="sortPools('fees24h')">Fees (24h) <i class="fas fa-sort"></i></th>
                             <th onclick="sortPools('status')">Status <i class="fas fa-sort"></i></th>
                             <th onclick="sortPools('location')">Location <i class="fas fa-sort"></i></th>
+                            <th>Alerts</th>
                         </tr>
                     </thead>
                 </table>
@@ -610,13 +627,5 @@
     <script src="scripts/autoRebalancing.js"></script>
     <script src="scripts/ui.js"></script>
     <script src="scripts/main.js"></script>
-
-    <!-- Auto-rebalancing toggle button (fixed position) -->
-    <div class="auto-rebalance-toggle">
-        <button class="btn btn-secondary" onclick="toggleAutoRebalancing()" id="rebalanceToggleBtn">
-            <i class="fas fa-sync-alt"></i>
-            Enable Auto-Rebalancing
-        </button>
-    </div>
 </body>
 </html> 

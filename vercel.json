@@ -19,6 +19,10 @@
       "dest": "api/webhook.js"
     },
     {
+      "src": "/api/notifications/(.*)",
+      "dest": "api/notifications.js?path=$1"
+    },
+    {
       "handle": "filesystem"
     }
   ]
