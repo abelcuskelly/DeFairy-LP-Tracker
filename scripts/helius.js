@@ -1,7 +1,8 @@
 // Helius API client to interact with Solana blockchain
 class HeliusClient {
     constructor() {
-        this.apiKey = 'b9ca8559-01e8-4823-8fa2-c7b2b5b0755c';
+        // SECURITY: API key should be loaded from environment variables
+        this.apiKey = this.getHeliusApiKey();
         this.mainnetRPC = 'https://mainnet.helius-rpc.com/?api-key=' + this.apiKey;
         this.apiBaseURL = 'https://api.helius.xyz/v0';
         this.websocketURL = 'wss://mainnet.helius-rpc.com/?api-key=' + this.apiKey;
@@ -11,6 +12,20 @@ class HeliusClient {
             'price': [],
             'pool': []
         };
+    }
+
+    getHeliusApiKey() {
+        // SECURITY WARNING: Never hardcode API keys in client-side code
+        // This should be loaded from environment variables or server-side
+        console.warn('SECURITY: Helius API key should be loaded from environment variables');
+        
+        // For local development - use environment variable or fallback
+        if (typeof window !== 'undefined' && window.HELIUS_API_KEY) {
+            return window.HELIUS_API_KEY;
+        }
+        
+        // Fallback for demo purposes - should be replaced with proper env var
+        return 'YOUR_HELIUS_API_KEY_HERE';
     }
 
     // RPC Methods

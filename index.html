@@ -470,10 +470,16 @@
         }
     </style>
     <script>
-        // Securely set the OpenAI API key
-        // IMPORTANT: This approach is only for local development
-        // In production, API keys should be handled server-side
-        window.OPENAI_API_KEY = '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';
+        // SECURITY WARNING: API keys should NEVER be hardcoded in client-side code!
+        // This is only for local development - remove in production
+        // In production, use server-side API endpoints only
+        
+        // For local development only - uncomment and add your keys here temporarily
+        // window.OPENAI_API_KEY = 'sk-proj-YOUR_NEW_OPENAI_KEY_HERE';
+        // window.HELIUS_API_KEY = 'YOUR_NEW_HELIUS_KEY_HERE';
+        
+        // Production should use the server-side /api/openai endpoint
+        console.warn('SECURITY: Remove hardcoded API keys before production deployment!');
     </script>
 </head>
 <body>

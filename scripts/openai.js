@@ -85,9 +85,18 @@ class OpenAIManager {
     }
 
     getAPIKey() {
-        // In a production environment, this would be retrieved from a secure server endpoint
-        // Never expose API keys in client-side code
-        return window.OPENAI_API_KEY;
+        // SECURITY WARNING: Never expose API keys in client-side code
+        // This method should only be used for local development
+        // In production, always use server-side API endpoints
+        console.warn('SECURITY WARNING: API key access in client-side code detected!');
+        console.warn('This should only be used for local development. Use server-side endpoints in production.');
+        
+        // For local development only - remove this in production
+        if (window.location.hostname === 'localhost') {
+            return window.OPENAI_API_KEY || 'YOUR_LOCAL_API_KEY_HERE';
+        }
+        
+        throw new Error('API key access not allowed in production environment');
     }
 }
 
