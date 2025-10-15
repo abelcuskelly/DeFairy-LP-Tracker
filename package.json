@@ -12,7 +12,7 @@
     "@orca-so/whirlpools-sdk": "^0.14.0",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.87.6",
-    "serve": "^14.2.1"
+    "serve": "^14.2.5"
   },
   "devDependencies": {
     "eslint": "^8.52.0"
