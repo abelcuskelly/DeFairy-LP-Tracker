@@ -48,16 +48,88 @@ class APIManager {
         }
     }
 
-    // Jupiter API - Primary price source
+    // Jupiter API - Primary price source with database caching
     async getTokenPrices(tokenAddresses) {
         try {
             const addresses = Array.isArray(tokenAddresses) ? tokenAddresses.join(',') : tokenAddresses;
+            
+            // Check database cache first
+            if (window.databaseService && window.databaseService.isInitialized) {
+                const cachedPrices = await this.getCachedPrices(addresses);
+                if (cachedPrices && cachedPrices.length > 0) {
+                    console.log('📊 Using cached token prices from database');
+                    return cachedPrices;
+                }
+            }
+            
             const url = `${this.baseURLs.jupiter}/price?ids=${addresses}`;
-            return await this.fetchWithRetry(url);
+            const prices = await this.fetchWithRetry(url);
+            
+            // Cache prices in database
+            if (window.databaseService && window.databaseService.isInitialized) {
+                await this.cachePrices(prices);
+            }
+            
+            return prices;
         } catch (error) {
             console.error('Jupiter API failed, trying fallback:', error);
             return this.getTokenPricesCoingecko(tokenAddresses);
         }
+    }
+
+    // Get cached prices from database
+    async getCachedPrices(tokenAddresses) {
+        try {
+            const addresses = Array.isArray(tokenAddresses) ? tokenAddresses : [tokenAddresses];
+            const cachedPrices = [];
+            
+            for (const address of addresses) {
+                const cachedPrice = await window.databaseService.getTokenPrice(address);
+                if (cachedPrice && this.isPriceFresh(cachedPrice.last_updated)) {
+                    cachedPrices.push({
+                        id: address,
+                        price: cachedPrice.price_usd,
+                        symbol: cachedPrice.symbol,
+                        name: cachedPrice.name,
+                        marketCap: cachedPrice.market_cap,
+                        volume24h: cachedPrice.volume_24h,
+                        priceChange24h: cachedPrice.price_change_24h
+                    });
+                }
+            }
+            
+            return cachedPrices.length > 0 ? cachedPrices : null;
+        } catch (error) {
+            console.error('Error getting cached prices:', error);
+            return null;
+        }
+    }
+
+    // Cache prices in database
+    async cachePrices(prices) {
+        try {
+            if (!Array.isArray(prices)) return;
+            
+            for (const price of prices) {
+                await window.databaseService.updateTokenPrice({
+                    address: price.id,
+                    symbol: price.symbol,
+                    name: price.name,
+                    priceUsd: price.price,
+                    marketCap: price.marketCap,
+                    volume24h: price.volume24h,
+                    priceChange24h: price.priceChange24h
+                });
+            }
+        } catch (error) {
+            console.error('Error caching prices:', error);
+        }
+    }
+
+    // Check if cached price is fresh (less than 5 minutes old)
+    isPriceFresh(lastUpdated) {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        return new Date(lastUpdated) > fiveMinutesAgo;
     }
 
     // CoinGecko API - Fallback price source
@@ -76,6 +148,11 @@ class APIManager {
         try {
             if (!walletAddress) {
                 throw new Error('Wallet address is required');
+            }
+            
+            // Set current wallet for database operations
+            if (window.databaseService) {
+                window.databaseService.setCurrentWallet(walletAddress);
             }
             
             showNotification('Fetching positions from blockchain...', 'info');
@@ -153,6 +230,41 @@ class APIManager {
                         priceAppreciation24h: await this.calculatePriceAppreciation24h(poolData, totalValue),
                         location: poolData.location // Store the location for proper hyperlinks
                     };
+
+                    // Store position data in database
+                    if (window.databaseService && window.databaseService.isInitialized) {
+                        try {
+                            const dbPositionData = {
+                                walletAddress: walletAddress,
+                                positionAddress: position.lpTokenMint,
+                                pool: {
+                                    poolAddress: poolData.pool,
+                                    dexName: poolData.location.toLowerCase(),
+                                    token0Address: poolData.token0?.address,
+                                    token1Address: poolData.token1?.address,
+                                    token0Symbol: poolData.token0?.symbol,
+                                    token1Symbol: poolData.token1?.symbol,
+                                    feeTier: poolData.feeTier,
+                                    tickSpacing: poolData.tickSpacing
+                                },
+                                token0Amount: poolData.token0?.amount || 0,
+                                token1Amount: poolData.token1?.amount || 0,
+                                token0ValueUsd: poolData.token0?.price * (poolData.token0?.amount || 0),
+                                token1ValueUsd: poolData.token1?.price * (poolData.token1?.amount || 0),
+                                totalValueUsd: totalValue,
+                                tickLowerIndex: poolData.tickLowerIndex,
+                                tickUpperIndex: poolData.tickUpperIndex,
+                                tickCurrentIndex: poolData.tickCurrentIndex,
+                                inRange: poolData.inRange,
+                                feesEarned: poolData.feesEarned,
+                                apy24h: poolData.apy24h
+                            };
+                            
+                            await window.databaseService.createOrUpdatePosition(dbPositionData);
+                        } catch (dbError) {
+                            console.warn('Failed to store position in database:', dbError);
+                        }
+                    }
                     
                     // Calculate P&L for multiple time periods
                     const timePeriods = ['1h', '7d', '30d'];

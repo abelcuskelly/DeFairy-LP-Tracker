@@ -752,4 +752,35 @@ function saveNotificationSettings() {
     
     showNotification('Notification settings saved!', 'success');
     document.querySelector('.notification-modal').remove();
+}
+
+// Analytics Dashboard Functions
+function showAnalytics() {
+    const walletAddress = document.getElementById('walletInput').value || window.currentWallet;
+    if (!walletAddress) {
+        showNotification('Please enter a wallet address first', 'warning');
+        return;
+    }
+    
+    if (window.analyticsDashboard) {
+        window.analyticsDashboard.show(walletAddress);
+    } else {
+        showNotification('Analytics dashboard not available', 'error');
+    }
+}
+
+// Show analytics button when portfolio is loaded
+function showAnalyticsButton() {
+    const analyticsBtn = document.getElementById('analyticsBtn');
+    if (analyticsBtn) {
+        analyticsBtn.style.display = 'inline-block';
+    }
+}
+
+// Hide analytics button when no portfolio
+function hideAnalyticsButton() {
+    const analyticsBtn = document.getElementById('analyticsBtn');
+    if (analyticsBtn) {
+        analyticsBtn.style.display = 'none';
+    }
 } 

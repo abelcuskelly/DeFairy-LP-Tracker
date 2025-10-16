@@ -160,6 +160,8 @@ class DeFairyApp {
             
             if (showLoadingUI) {
                 showNotification('Portfolio loaded successfully! ✨', 'success');
+                // Show analytics button when portfolio is loaded
+                showAnalyticsButton();
             }
             
             // Check for rebalancing opportunities
