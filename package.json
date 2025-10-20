@@ -2,6 +2,7 @@
   "name": "defairy",
   "version": "1.0.0",
   "description": "Magical Solana LP Portfolio Tracker",
+  "type": "module",
   "scripts": {
     "dev": "serve -s .",
     "build": "echo 'Static site - no build step required'",
@@ -15,7 +16,7 @@
     "serve": "^14.2.5"
   },
   "devDependencies": {
-    "eslint": "^8.52.0"
+    "eslint": "^9.0.0"
   },
   "keywords": [
     "solana",
